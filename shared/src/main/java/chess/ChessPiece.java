@@ -10,8 +10,10 @@ import java.util.Collection;
  */
 public class ChessPiece {
     private ChessGame.TeamColor pieceColor;
+    PieceType type;
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.pieceColor = pieceColor;
+        this.type = type;
     }
 
     /**
@@ -37,7 +39,7 @@ public class ChessPiece {
      * @return which type of chess piece this piece is
      */
     public PieceType getPieceType() {
-        throw new RuntimeException("Not implemented");
+        return type;
     }
 
     /**

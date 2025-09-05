@@ -9,7 +9,7 @@ package chess;
 public class ChessPosition {
     private int row;
     private int col;
-
+    public ChessPiece piece = null;
 
     public ChessPosition(int row, int col) {
         this.row = row;
