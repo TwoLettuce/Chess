@@ -1,6 +1,10 @@
 package chess;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  * Represents a single chess piece
@@ -77,4 +81,51 @@ public class ChessPiece {
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         throw new RuntimeException("Not implemented");
     }
+
+    private Collection<ChessMove> pawnMoves(ChessBoard board, ChessPosition myPosition){
+        throw new RuntimeException("Not Implemented");
+    }
+
+    private Collection<ChessMove> rookMoves(ChessBoard board, ChessPosition myPosition){
+        throw new RuntimeException("Not Implemented");
+    }
+
+    private Collection<ChessMove> bishopMoves(ChessBoard board, ChessPosition myPosition){
+        List<ChessMove> legalMoves = new ArrayList<ChessMove>();
+        int row = myPosition.getRow();
+        int col = myPosition.getColumn();
+
+        //moving up and right
+        while (row + 1 < 9 && col + 1 < 9){
+            row++;
+            col++;
+            if (board.getPiece(new ChessPosition(row, col)) == null) {
+                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
+                break;
+            } else {
+                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
+            }
+        }
+        row = myPosition.getRow();
+        col = myPosition.getColumn();
+        //moving up and left
+        while (row + 1 < 9 && col - 1 > 0){
+            row ++;
+            col --;
+        }
+        return legalMoves;
+    }
+
+    private Collection<ChessMove> knightMoves(ChessBoard board, ChessPosition myPosition){
+        throw new RuntimeException("Not Implemented");
+    }
+
+    private Collection<ChessMove> kingMoves(ChessBoard board, ChessPosition myPosition){
+        throw new RuntimeException("Not Implemented");
+    }
+
+    private Collection<ChessMove> queenMoves(ChessBoard board, ChessPosition myPosition){
+        throw new RuntimeException("Not Implemented");
+    }
+
 }

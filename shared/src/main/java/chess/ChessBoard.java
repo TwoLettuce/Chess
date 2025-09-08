@@ -10,13 +10,11 @@ import java.util.Arrays;
  */
 
 public class ChessBoard {
-    private ChessPosition[][] board = new ChessPosition[8][8];
+
+    private ChessPiece[][] board = new ChessPiece[8][8];
+
     public ChessBoard() {
-        for (int i = 0; i < 8; i++){
-            for (int n = 0; n < 8; n++){
-                board[i][n] = new ChessPosition(i, n);
-            }
-        }
+
     }
 
     /**
@@ -26,26 +24,22 @@ public class ChessBoard {
      * @param piece    the piece to add
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
-        if (position.piece == null) {
-            position.piece = piece;
-        } else {
-            throw new RuntimeException("Tried to put a piece where a piece already exists!");
-        }
+        board[position.getRow()-1][position.getColumn()-1] = piece;
     }
 
     @Override
     public String toString() {
-        String boardString = "";
+        StringBuilder boardString = new StringBuilder();
         for(int i = 0; i < 8; i++){
             for (int n = 0; n < 8; n++){
-                if (board[i][n].piece == null)
-                    boardString += "-";
+                if (board[i][n] == null)
+                    boardString.append("-");
                 else
-                    boardString += board[i][n].piece.toString();
+                    boardString.append(board[i][n].toString());
             }
-            boardString += "\n";
+            boardString.append("\n");
         }
-        return boardString;
+        return boardString.toString();
     }
 
     /**
@@ -56,7 +50,7 @@ public class ChessBoard {
      * position
      */
     public ChessPiece getPiece(ChessPosition position) {
-        return position.piece;
+        return board[position.getRow()-1][position.getColumn()-1];
     }
 
     /**
@@ -67,37 +61,11 @@ public class ChessBoard {
         //remove all existing pieces from board
         for (int i = 0; i < 8; i++){
             for (int n = 0; n < 8; n++){
-                if (board[i][n].piece != null){
-                    board[i][n].piece = null;
+                if (board[i][n] != null){
+                    board[i][n] = null;
                 }
             }
         }
 
-        for (int i = 0; i < 8; i++){
-            //White pawns
-            addPiece(board[6][i], new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN));
-            //Black pawns
-            addPiece(board[1][i], new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN));
-        }
-
-        //White pieces
-        addPiece(board[7][0], new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.ROOK));
-        addPiece(board[7][1], new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KNIGHT));
-        addPiece(board[7][2], new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.BISHOP));
-        addPiece(board[7][3], new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.QUEEN));
-        addPiece(board[7][4], new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KING));
-        addPiece(board[7][5], new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.BISHOP));
-        addPiece(board[7][6], new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.KNIGHT));
-        addPiece(board[7][7], new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.ROOK));
-
-        //Black pieces
-        addPiece(board[0][0], new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK));
-        addPiece(board[0][1], new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KNIGHT));
-        addPiece(board[0][2], new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.BISHOP));
-        addPiece(board[0][3], new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.QUEEN));
-        addPiece(board[0][4], new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KING));
-        addPiece(board[0][5], new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.BISHOP));
-        addPiece(board[0][6], new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KNIGHT));
-        addPiece(board[0][7], new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK));
     }
 }
