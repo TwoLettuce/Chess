@@ -104,7 +104,56 @@ public class ChessPiece {
     }
 
     private Collection<ChessMove> pawnMoves(ChessBoard board, ChessPosition myPosition){
-        throw new RuntimeException("Not Implemented");
+        ArrayList<ChessMove> legalMoves = new ArrayList<ChessMove>();
+
+        int row = myPosition.getRow();
+        int col = myPosition.getColumn();
+
+        //white pawn logic
+        if(board.getPiece(myPosition).getTeamColor() == ChessGame.TeamColor.WHITE) {
+            //forward
+            if (board.getPiece(new ChessPosition(row + 1, col)) == null) {
+                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row + 1, col), null));
+                //forward 2 spaces
+                if (row == 2 && board.getPiece(new ChessPosition(row+2, col)) == null){
+                    legalMoves.add(new ChessMove(myPosition, new ChessPosition(row + 2, col), null));
+                }
+            }
+
+
+            //forward and left (capture only)
+            if (board.getPiece(new ChessPosition(row+1, col-1)) != null && board.getPiece(new ChessPosition(row+1, col-1)).getTeamColor() == ChessGame.TeamColor.BLACK){
+                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row+1, col-1), null));
+            }
+
+            //forward and right (capture only)
+            if (board.getPiece(new ChessPosition(row+1, col+1)) != null && board.getPiece(new ChessPosition(row+1, col+1)).getTeamColor() == ChessGame.TeamColor.BLACK){
+                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row+1, col+1), null));
+            }
+        }
+        //black pawn logic
+        else if(board.getPiece(myPosition).getTeamColor() == ChessGame.TeamColor.BLACK) {
+            //forward
+            if (board.getPiece(new ChessPosition(row - 1, col)) == null) {
+                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row - 1, col), null));
+
+                //forward 2 spaces
+                if (row == 7 && board.getPiece(new ChessPosition(row-2, col)) == null){
+                    legalMoves.add(new ChessMove(myPosition, new ChessPosition(row - 2, col), null));
+                }
+            }
+            //forward and left (capture only)
+            if (board.getPiece(new ChessPosition(row-1, col-1))!= null && board.getPiece(new ChessPosition(row-1, col-1)).getTeamColor() == ChessGame.TeamColor.BLACK){
+                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row-1, col-1), null));
+            }
+
+            //forward and right (capture only)
+            if (board.getPiece(new ChessPosition(row-1, col+1)) != null && board.getPiece(new ChessPosition(row+1, col+1)).getTeamColor() == ChessGame.TeamColor.BLACK){
+                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row-1, col+1), null));
+            }
+        }
+
+        return legalMoves;
     }
 
     private Collection<ChessMove> rookMoves(ChessBoard board, ChessPosition myPosition){
@@ -263,6 +312,9 @@ public class ChessPiece {
     }
 
 
+    private ChessPiece.PieceType checkPromotion(ChessPosition myPosition){
+        throw new RuntimeException("Not implemented");
+    }
 
     @Override
     public boolean equals(Object o) {
