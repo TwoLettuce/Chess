@@ -120,13 +120,9 @@ public class ChessPiece {
         while (row + 1 < 9 && col + 1 < 9){
             row++;
             col++;
-            if (board.getPiece(new ChessPosition(row, col)) != null && board.getPiece(new ChessPosition(row,col)).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
+            legalMoves.add(validateMove(board, myPosition, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null){
                 break;
-            } else if (board.getPiece(new ChessPosition(row, col)) != null && board.getPiece(new ChessPosition(row,col)).getTeamColor() == board.getPiece(myPosition).getTeamColor()) {
-                break;
-            } else {
-                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
             }
         }
 
@@ -137,13 +133,9 @@ public class ChessPiece {
         while (row - 1 > 0 && col + 1 > 0){
             row--;
             col++;
-            if (board.getPiece(new ChessPosition(row, col)) != null && board.getPiece(new ChessPosition(row,col)).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
+            legalMoves.add(validateMove(board, myPosition, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null){
                 break;
-            } else if (board.getPiece(new ChessPosition(row, col)) != null && board.getPiece(new ChessPosition(row,col)).getTeamColor() == board.getPiece(myPosition).getTeamColor()) {
-                break;
-            } else {
-                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
             }
         }
         row = myPosition.getRow();
@@ -154,13 +146,9 @@ public class ChessPiece {
         while (row - 1 > 0 && col - 1 > 0) {
             row--;
             col--;
-            if (board.getPiece(new ChessPosition(row, col)) != null && board.getPiece(new ChessPosition(row,col)).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
+            legalMoves.add(validateMove(board, myPosition, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null){
                 break;
-            } else if (board.getPiece(new ChessPosition(row, col)) != null && board.getPiece(new ChessPosition(row,col)).getTeamColor() == board.getPiece(myPosition).getTeamColor()) {
-                break;
-            } else {
-                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
             }
         }
 
@@ -171,15 +159,13 @@ public class ChessPiece {
         while (row + 1 < 9 && col - 1 > 0){
             row ++;
             col --;
-            if (board.getPiece(new ChessPosition(row, col)) != null && board.getPiece(new ChessPosition(row,col)).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
+            legalMoves.add(validateMove(board, myPosition, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null){
                 break;
-            } else if (board.getPiece(new ChessPosition(row, col)) != null && board.getPiece(new ChessPosition(row,col)).getTeamColor() == board.getPiece(myPosition).getTeamColor()) {
-                break;
-            } else {
-                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
             }
         }
+
+        legalMoves.removeIf(Objects::isNull);
 
         return legalMoves;
     }
