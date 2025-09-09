@@ -9,7 +9,6 @@ package chess;
 public class ChessPosition {
     private int row;
     private int col;
-    public ChessPiece piece = null;
 
     public ChessPosition(int row, int col) {
         this.row = row;
@@ -22,6 +21,11 @@ public class ChessPosition {
      */
     public int getRow() {
         return row;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + row + "," + col + ']';
     }
 
     /**
