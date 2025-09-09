@@ -112,7 +112,7 @@ public class ChessPiece {
     }
 
     private Collection<ChessMove> bishopMoves(ChessBoard board, ChessPosition myPosition){
-        List<ChessMove> legalMoves = new ArrayList<ChessMove>();
+        ArrayList<ChessMove> legalMoves = new ArrayList<ChessMove>();
         int row = myPosition.getRow();
         int col = myPosition.getColumn();
 
@@ -171,7 +171,39 @@ public class ChessPiece {
     }
 
     private Collection<ChessMove> knightMoves(ChessBoard board, ChessPosition myPosition){
-        throw new RuntimeException("Not Implemented");
+        ArrayList<ChessMove> legalMoves = new ArrayList<ChessMove>();
+        int row = myPosition.getRow();
+        int col = myPosition.getColumn();
+
+        //up-up-right
+        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row+2, col+1)));
+
+        //up-right-right
+        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row+1, col+2)));
+
+        //down-right-right
+        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row-1, col+2)));
+
+        //down-down-right
+        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row-2, col+1)));
+
+        //down-down-left
+        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row-2, col-1)));
+
+        //down-left-left
+        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row-1, col-2)));
+
+        //up-left-left
+        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row+1, col-2)));
+
+        //up-up-left
+        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row+2, col -1)));
+
+        removeNull(legalMoves);
+
+        return legalMoves;
+
+
     }
 
     private Collection<ChessMove> kingMoves(ChessBoard board, ChessPosition myPosition){
