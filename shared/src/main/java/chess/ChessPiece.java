@@ -1,5 +1,6 @@
 package chess;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 
@@ -122,13 +123,25 @@ public class ChessPiece {
 
 
             //forward and left (capture only)
-            if (board.getPiece(new ChessPosition(row+1, col-1)) != null && board.getPiece(new ChessPosition(row+1, col-1)).getTeamColor() == ChessGame.TeamColor.BLACK){
+            if (col-1 >= 1 && board.getPiece(new ChessPosition(row+1, col-1)) != null && board.getPiece(new ChessPosition(row+1, col-1)).getTeamColor() == ChessGame.TeamColor.BLACK){
                 legalMoves.add(new ChessMove(myPosition, new ChessPosition(row+1, col-1), null));
             }
 
             //forward and right (capture only)
-            if (board.getPiece(new ChessPosition(row+1, col+1)) != null && board.getPiece(new ChessPosition(row+1, col+1)).getTeamColor() == ChessGame.TeamColor.BLACK){
+            if (col+1 <=8 && board.getPiece(new ChessPosition(row+1, col+1)) != null && board.getPiece(new ChessPosition(row+1, col+1)).getTeamColor() == ChessGame.TeamColor.BLACK){
                 legalMoves.add(new ChessMove(myPosition, new ChessPosition(row+1, col+1), null));
+            }
+
+            //Add promotion options, if applicable
+            ArrayList<ChessMove> currentMovesList = (ArrayList<ChessMove>) legalMoves.clone();
+            for (ChessMove move : currentMovesList){
+                if (move.getEndPosition().getRow() == 8){
+                    for (PieceType i : PieceType.values()){
+                        if (i != PieceType.KING && i != PieceType.PAWN)
+                            legalMoves.add(new ChessMove(myPosition, move.getEndPosition(), i));
+                    }
+                    legalMoves.remove(move);
+                }
             }
         }
         //black pawn logic
@@ -143,21 +156,71 @@ public class ChessPiece {
                 }
             }
             //forward and left (capture only)
-            if (board.getPiece(new ChessPosition(row-1, col-1))!= null && board.getPiece(new ChessPosition(row-1, col-1)).getTeamColor() == ChessGame.TeamColor.BLACK){
+            if (col-1 >= 1 && board.getPiece(new ChessPosition(row-1, col-1))!= null && board.getPiece(new ChessPosition(row-1, col-1)).getTeamColor() == ChessGame.TeamColor.WHITE){
                 legalMoves.add(new ChessMove(myPosition, new ChessPosition(row-1, col-1), null));
             }
 
             //forward and right (capture only)
-            if (board.getPiece(new ChessPosition(row-1, col+1)) != null && board.getPiece(new ChessPosition(row+1, col+1)).getTeamColor() == ChessGame.TeamColor.BLACK){
+            if (col+1 <= 8 && board.getPiece(new ChessPosition(row-1, col+1)) != null && board.getPiece(new ChessPosition(row-1, col+1)).getTeamColor() == ChessGame.TeamColor.WHITE){
                 legalMoves.add(new ChessMove(myPosition, new ChessPosition(row-1, col+1), null));
             }
+
+            //add promotion options, if applicable
+            ArrayList<ChessMove> currentMovesList = (ArrayList<ChessMove>) legalMoves.clone();
+            for (ChessMove move : currentMovesList){
+                if (move.getEndPosition().getRow() == 1){
+                    for (PieceType i : PieceType.values()){
+                        if (i != PieceType.KING && i != PieceType.PAWN)
+                            legalMoves.add(new ChessMove(myPosition, move.getEndPosition(), i));
+                    }
+                    legalMoves.remove(move);
+                }
+            }
+
         }
 
         return legalMoves;
     }
 
-    private Collection<ChessMove> rookMoves(ChessBoard board, ChessPosition myPosition){
-        throw new RuntimeException("Not Implemented");
+    private Collection<ChessMove> rookMoves(ChessBoard board, ChessPosition myPos){
+        ArrayList<ChessMove> legalMoves = new ArrayList<>();
+
+        int col = myPos.getColumn();
+        int row = myPos.getRow()+1;
+
+        //up
+        while (row <= 8){
+            legalMoves.add(valMove(board, myPos, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null) { break; }
+            row++;
+        }
+
+        //right
+        row = myPos.getRow(); col = myPos.getColumn()+1;
+        while (col <= 8){
+            legalMoves.add(valMove(board, myPos, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null) { break; }
+            col++;
+        }
+
+        //down
+        row = myPos.getRow()-1; col = myPos.getColumn();
+        while (row >=1){
+            legalMoves.add(valMove(board, myPos, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null) { break; }
+            row--;
+        }
+
+        //left
+        row = myPos.getRow(); col = myPos.getColumn()-1;
+        while (col >= 1){
+            legalMoves.add(valMove(board, myPos, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null) { break; }
+            col--;
+        }
+
+        removeNull(legalMoves);
+        return legalMoves;
     }
 
     private Collection<ChessMove> bishopMoves(ChessBoard board, ChessPosition myPosition){
@@ -169,7 +232,7 @@ public class ChessPiece {
         while (row + 1 < 9 && col + 1 < 9){
             row++;
             col++;
-            legalMoves.add(validateMove(board, myPosition, new ChessPosition(row, col)));
+            legalMoves.add(valMove(board, myPosition, new ChessPosition(row, col)));
             if (board.getPiece(new ChessPosition(row, col)) != null){
                 break;
             }
@@ -182,7 +245,7 @@ public class ChessPiece {
         while (row - 1 > 0 && col + 1 > 0){
             row--;
             col++;
-            legalMoves.add(validateMove(board, myPosition, new ChessPosition(row, col)));
+            legalMoves.add(valMove(board, myPosition, new ChessPosition(row, col)));
             if (board.getPiece(new ChessPosition(row, col)) != null){
                 break;
             }
@@ -195,7 +258,7 @@ public class ChessPiece {
         while (row - 1 > 0 && col - 1 > 0) {
             row--;
             col--;
-            legalMoves.add(validateMove(board, myPosition, new ChessPosition(row, col)));
+            legalMoves.add(valMove(board, myPosition, new ChessPosition(row, col)));
             if (board.getPiece(new ChessPosition(row, col)) != null){
                 break;
             }
@@ -208,7 +271,7 @@ public class ChessPiece {
         while (row + 1 < 9 && col - 1 > 0){
             row ++;
             col --;
-            legalMoves.add(validateMove(board, myPosition, new ChessPosition(row, col)));
+            legalMoves.add(valMove(board, myPosition, new ChessPosition(row, col)));
             if (board.getPiece(new ChessPosition(row, col)) != null){
                 break;
             }
@@ -225,28 +288,28 @@ public class ChessPiece {
         int col = myPosition.getColumn();
 
         //up-up-right
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row+2, col+1)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row+2, col+1)));
 
         //up-right-right
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row+1, col+2)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row+1, col+2)));
 
         //down-right-right
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row-1, col+2)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row-1, col+2)));
 
         //down-down-right
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row-2, col+1)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row-2, col+1)));
 
         //down-down-left
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row-2, col-1)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row-2, col-1)));
 
         //down-left-left
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row-1, col-2)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row-1, col-2)));
 
         //up-left-left
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row+1, col-2)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row+1, col-2)));
 
         //up-up-left
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row+2, col -1)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row+2, col -1)));
 
         removeNull(legalMoves);
 
@@ -261,28 +324,28 @@ public class ChessPiece {
         List<ChessMove> legalMoves = new ArrayList<ChessMove>();
 
         //up
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row + 1, col)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row + 1, col)));
 
         //up-right
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row + 1, col + 1)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row + 1, col + 1)));
 
         //right
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row, col +1)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row, col +1)));
 
         //down-right
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row -1, col +1)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row -1, col +1)));
 
         //down
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row -1, col)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row -1, col)));
 
         //down-left
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row-1, col-1)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row-1, col-1)));
 
         //left
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row, col-1)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row, col-1)));
 
         //up-left
-        legalMoves.add(validateMove(board, myPosition, new ChessPosition(row+1, col-1)));
+        legalMoves.add(valMove(board, myPosition, new ChessPosition(row+1, col-1)));
 
 
         legalMoves.removeIf(Objects::isNull);
@@ -290,12 +353,81 @@ public class ChessPiece {
         return legalMoves;
     }
 
-    private Collection<ChessMove> queenMoves(ChessBoard board, ChessPosition myPosition){
-        throw new RuntimeException("Not Implemented");
+    private Collection<ChessMove> queenMoves(ChessBoard board, ChessPosition myPos){
+        ArrayList<ChessMove> legalMoves = new ArrayList<>();
+
+        int col = myPos.getColumn();
+        int row = myPos.getRow()+1;
+
+        //up
+        while (row <= 8){
+            legalMoves.add(valMove(board, myPos, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null) { break; }
+            row++;
+        }
+
+        //up-right
+        row = myPos.getRow()+1; col = myPos.getColumn()+1;
+        while (row <= 8 && col <= 8){
+            legalMoves.add(valMove(board, myPos, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null) { break; }
+            row++; col++;
+        }
+
+        //right
+        row = myPos.getRow(); col = myPos.getColumn()+1;
+        while (col <= 8){
+            legalMoves.add(valMove(board, myPos, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null) { break; }
+            col++;
+        }
+
+        //down-right
+        row = myPos.getRow()-1; col = myPos.getColumn()+1;
+        while (row >=1 && col <= 8){
+            legalMoves.add(valMove(board, myPos, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null) { break; }
+            row--; col++;
+        }
+
+        //down
+        row = myPos.getRow()-1; col = myPos.getColumn();
+        while (row >=1){
+            legalMoves.add(valMove(board, myPos, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null) { break; }
+            row--;
+        }
+
+        //down-left
+        row = myPos.getRow()-1; col = myPos.getColumn()-1;
+        while (row >=1 && col >= 1){
+            legalMoves.add(valMove(board, myPos, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null) { break; }
+            row--; col--;
+        }
+
+        //left
+        row = myPos.getRow(); col = myPos.getColumn()-1;
+        while (col >= 1){
+            legalMoves.add(valMove(board, myPos, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null) { break; }
+            col--;
+        }
+
+        //up-left
+        row = myPos.getRow()+1; col = myPos.getColumn()-1;
+        while (row <=8 && col >= 1){
+            legalMoves.add(valMove(board, myPos, new ChessPosition(row, col)));
+            if (board.getPiece(new ChessPosition(row, col)) != null) { break; }
+            row++; col--;
+        }
+
+        removeNull(legalMoves);
+        return legalMoves;
     }
 
 
-    private ChessMove validateMove(ChessBoard board, ChessPosition myPosition, ChessPosition newPosition){
+    private ChessMove valMove(ChessBoard board, ChessPosition myPosition, ChessPosition newPosition){
         if (newPosition.getRow() > 8 || newPosition.getColumn() > 8 || newPosition.getRow() < 1 || newPosition.getColumn() < 1){
             return null;
         }
@@ -312,9 +444,7 @@ public class ChessPiece {
     }
 
 
-    private ChessPiece.PieceType checkPromotion(ChessPosition myPosition){
-        throw new RuntimeException("Not implemented");
-    }
+
 
     @Override
     public boolean equals(Object o) {
