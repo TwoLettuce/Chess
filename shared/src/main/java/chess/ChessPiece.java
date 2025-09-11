@@ -242,7 +242,7 @@ public class ChessPiece {
         col = myPosition.getColumn();
 
         //moving down and right
-        while (row - 1 > 0 && col + 1 > 0){
+        while (row - 1 > 0 && col + 1 < 9){
             row--;
             col++;
             legalMoves.add(valMove(board, myPosition, new ChessPosition(row, col)));
