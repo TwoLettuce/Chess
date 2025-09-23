@@ -54,20 +54,18 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        if (isInCheckmate(TeamColor.BLACK) || isInCheckmate(TeamColor.WHITE)) {
-            return null;
-        }
         ChessBoard currentBoard = board;
         ArrayList<ChessMove> goodMoves = new ArrayList<>();
         for (ChessMove move : board.getPiece(startPosition).pieceMoves(board, startPosition)){
             try {
                 makeMove(move);
-                if (isInCheck(TeamColor.BLACK) || isInCheck(TeamColor.WHITE))
+                if (!isInCheck(currentTurn))
                     goodMoves.add(move);
-            } catch(InvalidMoveException _) {}
+                board = currentBoard;
+            } catch(InvalidMoveException _) {
+                board = currentBoard;
+            }
         }
-
-        
         return goodMoves;
     }
 
@@ -78,12 +76,10 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        if (validMoves(move.getStartPosition()).contains(move)) {
-            board.addPiece(move.getEndPosition(), board.getPiece(move.getStartPosition()));
-            board.removePiece(move.getStartPosition());
-        } else {
+        board.addPiece(move.getEndPosition(), board.getPiece(move.getStartPosition()));
+        board.removePiece(move.getStartPosition());
+        if(isInCheck(board.getPiece(move.getEndPosition()).getTeamColor()))
             throw new InvalidMoveException();
-        }
     }
 
     /**
@@ -96,6 +92,21 @@ public class ChessGame {
         throw new RuntimeException("Not implemented");
     }
 
+    //checks for unobstructed enemy pawns, bishops, and queens that are able to attack the King
+    private boolean checkDiagonally(TeamColor teamColor){
+        return false;
+    }
+
+    //checks for unobstructed enemy rooks that are able to attack the king
+    private boolean checkVertHorz(TeamColor teamColor){
+        return false;
+    }
+
+    //checks for enemy knights that are able to attack the King
+    private boolean checkKnight(TeamColor teamColor){
+
+    }
+
     /**
      * Determines if the given team is in checkmate
      *
@@ -103,7 +114,21 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        for (int row = 1; row <=8; row++){
+            for (int col = 1; col <=8; col++){
+
+                ChessPosition thisPosition = new ChessPosition(row, col);
+                if (board.getPiece(thisPosition) == null)
+                    continue;
+                if (board.getPiece(thisPosition).getTeamColor() == teamColor) {
+                    Collection<ChessMove> potentialMoves = validMoves(thisPosition);
+
+                    if (!potentialMoves.isEmpty())
+                        return false;
+                }
+            }
+        }
+        return true;
     }
 
     /**
@@ -135,13 +160,5 @@ public class ChessGame {
         throw new RuntimeException("Not implemented");
     }
 
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
 
-    @Override
-    public boolean equals(Object obj) {
-        return super.equals(obj);
-    }
 }

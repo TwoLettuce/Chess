@@ -35,7 +35,7 @@ public class ChessBoard {
     @Override
     public String toString() {
         StringBuilder boardString = new StringBuilder();
-        for(int i = 0; i < 8; i++){
+        for(int i = 7; i >=0; i--){
             for (int n = 0; n < 8; n++){
                 if (board[i][n] == null)
                     boardString.append("-");
