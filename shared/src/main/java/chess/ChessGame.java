@@ -1,5 +1,8 @@
 package chess;
 
+import jdk.dynalink.beans.MissingMemberHandlerFactory;
+
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -10,15 +13,19 @@ import java.util.Collection;
  */
 public class ChessGame {
 
-    public ChessGame() {
+    TeamColor currentTurn;
+    ChessBoard board = new ChessBoard();
 
+    public ChessGame() {
+        currentTurn = TeamColor.WHITE;
+        board.resetBoard();
     }
 
     /**
      * @return Which team's turn it is
      */
     public TeamColor getTeamTurn() {
-        throw new RuntimeException("Not implemented");
+        return currentTurn;
     }
 
     /**
@@ -27,7 +34,8 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        throw new RuntimeException("Not implemented");
+        currentTurn = team;
+
     }
 
     /**
@@ -46,7 +54,21 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
+        if (isInCheckmate(TeamColor.BLACK) || isInCheckmate(TeamColor.WHITE)) {
+            return null;
+        }
+        ChessBoard currentBoard = board;
+        ArrayList<ChessMove> goodMoves = new ArrayList<>();
+        for (ChessMove move : board.getPiece(startPosition).pieceMoves(board, startPosition)){
+            try {
+                makeMove(move);
+                if (isInCheck(TeamColor.BLACK) || isInCheck(TeamColor.WHITE))
+                    goodMoves.add(move);
+            } catch(InvalidMoveException _) {}
+        }
+
+        
+        return goodMoves;
     }
 
     /**
@@ -56,7 +78,12 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        if (validMoves(move.getStartPosition()).contains(move)) {
+            board.addPiece(move.getEndPosition(), board.getPiece(move.getStartPosition()));
+            board.removePiece(move.getStartPosition());
+        } else {
+            throw new InvalidMoveException();
+        }
     }
 
     /**

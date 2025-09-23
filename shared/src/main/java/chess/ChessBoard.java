@@ -28,6 +28,10 @@ public class ChessBoard {
         board[position.getRow()-1][position.getColumn()-1] = piece;
     }
 
+    public void removePiece(ChessPosition position) {
+        board[position.getRow()-1][position.getColumn()-1] = null;
+    }
+
     @Override
     public String toString() {
         StringBuilder boardString = new StringBuilder();

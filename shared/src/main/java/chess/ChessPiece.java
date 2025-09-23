@@ -11,8 +11,8 @@ import java.util.*;
  * signature of the existing methods.
  */
 public class ChessPiece {
-    private ChessGame.TeamColor pieceColor;
-    private PieceType type;
+    private final ChessGame.TeamColor pieceColor;
+    private final PieceType type;
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.pieceColor = pieceColor;
@@ -32,28 +32,7 @@ public class ChessPiece {
     }
 
 
-    @Override
-    public String toString() {
-        if(pieceColor == ChessGame.TeamColor.WHITE){
-            return switch (type) {
-                case KING -> "K";
-                case QUEEN -> "Q";
-                case BISHOP -> "B";
-                case KNIGHT -> "N";
-                case ROOK -> "R";
-                case PAWN -> "P";
-            };
-        } else {
-            return switch (type) {
-                case KING -> "k";
-                case QUEEN -> "q";
-                case BISHOP -> "b";
-                case KNIGHT -> "n";
-                case ROOK -> "r";
-                case PAWN -> "p";
-            };
-        }
-    }
+
 
     /**
      * @return Which team this chess piece belongs to
@@ -445,6 +424,28 @@ public class ChessPiece {
 
 
 
+    @Override
+    public String toString() {
+        if(pieceColor == ChessGame.TeamColor.WHITE){
+            return switch (type) {
+                case KING -> "K";
+                case QUEEN -> "Q";
+                case BISHOP -> "B";
+                case KNIGHT -> "N";
+                case ROOK -> "R";
+                case PAWN -> "P";
+            };
+        } else {
+            return switch (type) {
+                case KING -> "k";
+                case QUEEN -> "q";
+                case BISHOP -> "b";
+                case KNIGHT -> "n";
+                case ROOK -> "r";
+                case PAWN -> "p";
+            };
+        }
+    }
 
     @Override
     public boolean equals(Object o) {
