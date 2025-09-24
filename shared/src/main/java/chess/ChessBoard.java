@@ -32,6 +32,11 @@ public class ChessBoard {
         board[position.getRow()-1][position.getColumn()-1] = null;
     }
 
+    public void movePiece(ChessMove move){
+        addPiece(move.getEndPosition(), getPiece(move.getStartPosition()));
+        removePiece(move.getStartPosition());
+    }
+
     @Override
     public String toString() {
         StringBuilder boardString = new StringBuilder();
