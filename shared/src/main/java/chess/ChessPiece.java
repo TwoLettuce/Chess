@@ -76,7 +76,7 @@ public class ChessPiece {
                 return queenMoves(board, myPosition);
             }
             case null, default -> {
-                return new ArrayList<ChessMove>();
+                return new ArrayList<>();
             }
         }
 

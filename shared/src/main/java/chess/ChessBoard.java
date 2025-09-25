@@ -18,6 +18,15 @@ public class ChessBoard {
 
     }
 
+    //copy constructor
+    public ChessBoard(ChessBoard board){
+        for (int row = 1; row <= 8; row ++){
+            for (int col = 1; col <= 8; col++){
+                addPiece(new ChessPosition(row, col), board.getPiece(new ChessPosition(row, col)));
+            }
+        }
+    }
+
     /**
      * Adds a chess piece to the chessboard
      *
@@ -26,6 +35,14 @@ public class ChessBoard {
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
         board[position.getRow()-1][position.getColumn()-1] = piece;
+    }
+
+    public ChessBoard clone() throws CloneNotSupportedException {
+        try {
+            return (ChessBoard) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void removePiece(ChessPosition position) {

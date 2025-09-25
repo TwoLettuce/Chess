@@ -57,16 +57,16 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        ChessBoard currentBoard = board;
+        ChessBoard currentBoard = new ChessBoard(board);
         ArrayList<ChessMove> goodMoves = new ArrayList<>();
         for (ChessMove move : board.getPiece(startPosition).pieceMoves(board, startPosition)){
             try {
                 makeMove(move);
                 if (!isInCheck(currentTurn))
                     goodMoves.add(move);
-                board = currentBoard;
+                board = new ChessBoard(currentBoard);
             } catch(InvalidMoveException _) {
-                board = currentBoard;
+                board = new ChessBoard(currentBoard);
             }
         }
         return goodMoves;
@@ -354,7 +354,13 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        if (isInCheck(teamColor)) return false;
+
+        for(int row = 1; row <= 8; row++){
+            for (int col = 1; col <= 8; col++){
+                
+            }
+        }
     }
 
     /**
