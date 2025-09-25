@@ -50,7 +50,11 @@ public class ChessBoard {
     }
 
     public void movePiece(ChessMove move){
-        addPiece(move.getEndPosition(), getPiece(move.getStartPosition()));
+        if (getPiece(move.getStartPosition()).getPieceType() == ChessPiece.PieceType.PAWN)
+            addPiece(move.getEndPosition(), new ChessPiece(getPiece(move.getStartPosition()).getTeamColor(), move.getPromotionPiece()));
+        else
+            addPiece(move.getEndPosition(), getPiece(move.getStartPosition()));
+
         removePiece(move.getStartPosition());
     }
 
