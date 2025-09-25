@@ -358,9 +358,18 @@ public class ChessGame {
 
         for(int row = 1; row <= 8; row++){
             for (int col = 1; col <= 8; col++){
-                
+                var thisPos = new ChessPosition(row, col);
+                if(board.getPiece(thisPos) != null && board.getPiece(thisPos).getTeamColor() == teamColor){
+                    if (validMoves(thisPos).isEmpty()){
+                        continue;
+                    } else {
+                        return false;
+                    }
+
+                }
             }
         }
+        return true;
     }
 
     /**
