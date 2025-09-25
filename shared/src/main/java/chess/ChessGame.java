@@ -1,8 +1,5 @@
 package chess;
 
-import jdk.dynalink.beans.MissingMemberHandlerFactory;
-
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
@@ -41,6 +38,11 @@ public class ChessGame {
 
     }
 
+    private void flipTeamTurn(){
+        if (currentTurn == TeamColor.BLACK) currentTurn = TeamColor.WHITE;
+        else currentTurn = TeamColor.BLACK;
+    }
+
     /**
      * Enum identifying the 2 possible teams in a chess game
      */
@@ -61,7 +63,7 @@ public class ChessGame {
         ArrayList<ChessMove> goodMoves = new ArrayList<>();
         for (ChessMove move : board.getPiece(startPosition).pieceMoves(board, startPosition)){
             try {
-                makeMove(move);
+                tryMove(move);
                 if (!isInCheck(currentTurn))
                     goodMoves.add(move);
                 board = new ChessBoard(currentBoard);
@@ -78,19 +80,24 @@ public class ChessGame {
      * @param move chess move to perform
      * @throws InvalidMoveException if move is invalid
      */
+    private void tryMove(ChessMove move) throws InvalidMoveException {
+        if(board.getPiece(move.getStartPosition()) == null) throw new InvalidMoveException("There's no piece there!");
+//        if(board.getPiece(move.getStartPosition()).getTeamColor() != getTeamTurn()) throw new InvalidMoveException("That's not your piece!");
+        if(!board.getPiece(move.getStartPosition()).pieceMoves(board, move.getStartPosition()).contains(move)) throw new InvalidMoveException("Invalid move!");
+        board.movePiece(move);
+        if(isInCheck(board.getPiece(move.getEndPosition()).getTeamColor()))
+            throw new InvalidMoveException();
+    }
+
     public void makeMove(ChessMove move) throws InvalidMoveException {
         if(board.getPiece(move.getStartPosition()) == null) throw new InvalidMoveException("There's no piece there!");
-        if(board.getPiece(move.getStartPosition()).getTeamColor() != getTeamTurn()) throw new InvalidMoveException("That's not your piece!");
+//        if(board.getPiece(move.getStartPosition()).getTeamColor() != getTeamTurn()) throw new InvalidMoveException("That's not your piece!");
         if(!board.getPiece(move.getStartPosition()).pieceMoves(board, move.getStartPosition()).contains(move)) throw new InvalidMoveException("Invalid move!");
         board.movePiece(move);
         if(isInCheck(board.getPiece(move.getEndPosition()).getTeamColor()))
             throw new InvalidMoveException();
 
-        if (getTeamTurn() == TeamColor.BLACK) {
-            setTeamTurn(TeamColor.WHITE);
-        } else {
-            setTeamTurn(TeamColor.BLACK);
-        }
+        flipTeamTurn();
     }
 
     /**
