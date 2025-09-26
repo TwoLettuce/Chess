@@ -79,7 +79,10 @@ public class ChessGame {
 
     private void tryMove(ChessMove move) throws InvalidMoveException {
         if(board.getPiece(move.getStartPosition()) == null) throw new InvalidMoveException("There's no piece there!");
-        if(!board.getPiece(move.getStartPosition()).pieceMoves(board, move.getStartPosition()).contains(move)) throw new InvalidMoveException("Invalid move!");
+        if (board.getPiece(move.getStartPosition()).getPieceType() != ChessPiece.PieceType.KING)
+            if(!board.getPiece(move.getStartPosition()).pieceMoves(board, move.getStartPosition()).contains(move))
+                throw new InvalidMoveException("Invalid move!");
+
         board.movePiece(move);
         if(isInCheck(board.getPiece(move.getEndPosition()).getTeamColor()))
             throw new InvalidMoveException();
@@ -434,15 +437,15 @@ public class ChessGame {
             if (kingSideClear && !isInCheck(getTeamTurn())) {
                 boolean kingCastleIsLegal = false;
                 for (int i = 1; i < 3; i++) {
-                    try {
-                        tryMove(new ChessMove(kingPos, new ChessPosition(kingPos.getRow(), kingPos.getColumn()+i), null));
-                        board = new ChessBoard(currentBoard);
-                        kingCastleIsLegal = true;
-                    } catch (InvalidMoveException _) {
+                    var move = new ChessMove(kingPos, new ChessPosition(kingPos.getRow(), kingPos.getColumn()+i), null);
+                    board.movePiece(move);
+                    if(isInCheck(board.getPiece(move.getEndPosition()).getTeamColor())) {
                         board = new ChessBoard(currentBoard);
                         kingCastleIsLegal = false;
                         break;
                     }
+                    board = new ChessBoard(currentBoard);
+                    kingCastleIsLegal = true;
                 }
                 if (kingCastleIsLegal)
                     validCastlingMoves.add(new ChessMove(kingPos, new ChessPosition(kingPos.getRow(), kingPos.getColumn()+2), null));

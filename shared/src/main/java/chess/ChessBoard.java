@@ -2,6 +2,7 @@ package chess;
 
 import java.util.Arrays;
 import java.util.Objects;
+import static java.lang.Math.abs;
 
 /**
  * A chessboard that can hold and rearrange chess pieces.
@@ -37,25 +38,39 @@ public class ChessBoard {
         board[position.getRow()-1][position.getColumn()-1] = piece;
     }
 
-    public ChessBoard clone() throws CloneNotSupportedException {
-        try {
-            return (ChessBoard) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public void removePiece(ChessPosition position) {
         board[position.getRow()-1][position.getColumn()-1] = null;
     }
 
     public void movePiece(ChessMove move){
+        if (getPiece(move.getStartPosition()).getPieceType() == ChessPiece.PieceType.KING){
+            moveKing(move);
+            return;
+        }
+
         if (getPiece(move.getStartPosition()).getPieceType() == ChessPiece.PieceType.PAWN && move.getPromotionPiece() != null)
             addPiece(move.getEndPosition(), new ChessPiece(getPiece(move.getStartPosition()).getTeamColor(), move.getPromotionPiece()));
         else
             addPiece(move.getEndPosition(), getPiece(move.getStartPosition()));
 
         removePiece(move.getStartPosition());
+    }
+
+
+    private void moveKing(ChessMove move) {
+        addPiece(move.getEndPosition(), getPiece(move.getStartPosition()));
+        removePiece(move.getStartPosition());
+        if (abs(move.getStartPosition().getColumn() - move.getEndPosition().getColumn()) > 1) {
+            if (Objects.equals(move.getEndPosition(), new ChessPosition(1, 3)) && !getPiece(new ChessPosition(1, 1)).hasMoved) {
+                movePiece(new ChessMove(new ChessPosition(1, 1), new ChessPosition(1, 4), null));
+            } else if (Objects.equals(move.getEndPosition(), new ChessPosition(1, 7)) && !getPiece(new ChessPosition(1, 8)).hasMoved) {
+                movePiece(new ChessMove(new ChessPosition(1, 8), new ChessPosition(1, 6), null));
+            } else if (Objects.equals(move.getEndPosition(), new ChessPosition(8, 3)) && !getPiece(new ChessPosition(8, 1)).hasMoved) {
+                movePiece(new ChessMove(new ChessPosition(8, 1), new ChessPosition(8, 3), null));
+            } else if (Objects.equals(move.getEndPosition(), new ChessPosition(8, 7)) && !getPiece(new ChessPosition(8, 8)).hasMoved) {
+                movePiece(new ChessMove(new ChessPosition(8, 8), new ChessPosition(8, 6), null));
+            }
+        }
     }
 
     @Override
@@ -123,8 +138,6 @@ public class ChessBoard {
         addPiece(new ChessPosition(8, 6), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.BISHOP));
         addPiece(new ChessPosition(8, 7), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.KNIGHT));
         addPiece(new ChessPosition(8, 8), new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.ROOK));
-
-
     }
 
     @Override
