@@ -13,11 +13,11 @@ import java.util.Set;
  */
 public class ChessGame {
 
-    TeamColor currentTurn;
-    ChessBoard board = new ChessBoard();
 
+    TeamColor currentTurn = TeamColor.WHITE;
+    ChessBoard board = new ChessBoard();
+    ChessBoard previousBoard;
     public ChessGame() {
-        currentTurn = TeamColor.WHITE;
         board.resetBoard();
     }
 
@@ -71,10 +71,18 @@ public class ChessGame {
                 board = new ChessBoard(currentBoard);
             }
         }
-        goodMoves.addAll(checkCastling());
+        goodMoves.addAll(checkCastling(board.getPiece(startPosition).getTeamColor()));
+        goodMoves.addAll(enPassant(board.getPiece(startPosition).getTeamColor()));
         return goodMoves;
     }
 
+    private Collection<ChessMove> enPassant(TeamColor teamColor) {
+        ArrayList<ChessMove> possibleEnPassants = new ArrayList<>();
+
+        
+
+        return possibleEnPassants;
+    }
 
 
     private void tryMove(ChessMove move) throws InvalidMoveException {
@@ -96,6 +104,7 @@ public class ChessGame {
      */
 
     public void makeMove(ChessMove move) throws InvalidMoveException {
+        previousBoard = new ChessBoard(board);
         tryMove(move);
         if(board.getPiece(move.getEndPosition()).getTeamColor() != getTeamTurn()) throw new InvalidMoveException("That's not your piece!");
         flipTeamTurn();
@@ -383,18 +392,18 @@ public class ChessGame {
         return true;
     }
 
-    private Collection<ChessMove> checkCastling (){
+    private Collection<ChessMove> checkCastling (TeamColor teamColor){
         ChessBoard currentBoard = new ChessBoard(board);
         ArrayList<ChessMove> validCastlingMoves = new ArrayList<>();
         ChessPosition kingPos;
         try {
-            kingPos = findKing(getTeamTurn());
+            kingPos = findKing(teamColor);
         } catch (Exception _) {
             return validCastlingMoves;
         }
         if (board.getPiece(kingPos).hasMoved || kingPos.getColumn() != 5)
             return validCastlingMoves;
-        if ((getTeamTurn() == TeamColor.BLACK && kingPos.getRow() != 8) || (getTeamTurn() == TeamColor.WHITE && kingPos.getRow() != 1))
+        if ((teamColor == TeamColor.BLACK && kingPos.getRow() != 8) || (teamColor == TeamColor.WHITE && kingPos.getRow() != 1))
             return validCastlingMoves;
 
         ChessPosition queensRookPos = new ChessPosition(kingPos.getRow(), 1);

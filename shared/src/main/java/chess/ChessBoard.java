@@ -66,7 +66,7 @@ public class ChessBoard {
             } else if (Objects.equals(move.getEndPosition(), new ChessPosition(1, 7)) && !getPiece(new ChessPosition(1, 8)).hasMoved) {
                 movePiece(new ChessMove(new ChessPosition(1, 8), new ChessPosition(1, 6), null));
             } else if (Objects.equals(move.getEndPosition(), new ChessPosition(8, 3)) && !getPiece(new ChessPosition(8, 1)).hasMoved) {
-                movePiece(new ChessMove(new ChessPosition(8, 1), new ChessPosition(8, 3), null));
+                movePiece(new ChessMove(new ChessPosition(8, 1), new ChessPosition(8, 4), null));
             } else if (Objects.equals(move.getEndPosition(), new ChessPosition(8, 7)) && !getPiece(new ChessPosition(8, 8)).hasMoved) {
                 movePiece(new ChessMove(new ChessPosition(8, 8), new ChessPosition(8, 6), null));
             }
