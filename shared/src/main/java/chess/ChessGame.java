@@ -17,6 +17,7 @@ public class ChessGame {
     TeamColor currentTurn = TeamColor.WHITE;
     ChessBoard board = new ChessBoard();
     ChessBoard previousBoard;
+    
     public ChessGame() {
         board.resetBoard();
     }
@@ -75,13 +76,65 @@ public class ChessGame {
         goodMoves.addAll(enPassant(board.getPiece(startPosition).getTeamColor()));
         return goodMoves;
     }
-
+    
+    //TODO: this vvv
     private Collection<ChessMove> enPassant(TeamColor teamColor) {
         ArrayList<ChessMove> possibleEnPassants = new ArrayList<>();
+        int row;
+        int moveRow;
+        if(teamColor == TeamColor.WHITE) {
+            row = 5;
+            moveRow = 6;
+        } else {
+            row = 4;
+            moveRow = 3;
+        }
 
-        
+        for (int col = 1; col <= 8; col++){
+            ChessPiece thisPiece = board.getPiece(new ChessPosition(row, col));
+            if (thisPiece == null) continue;
+
+            if (thisPiece.getPieceType() == ChessPiece.PieceType.PAWN){
+                if(checkPassantRight(new ChessPosition(row, col), teamColor)){
+                    possibleEnPassants.add(new ChessMove(new ChessPosition(5, col), new ChessPosition(moveRow, col+1), null));
+                } else if (checkPassantLeft(new ChessPosition(row, col), teamColor)) {
+                    possibleEnPassants.add(new ChessMove(new ChessPosition(5, col), new ChessPosition(moveRow, col-1), null));
+                }
+            }
+        }
 
         return possibleEnPassants;
+    }
+
+    boolean checkPassantRight(ChessPosition pawnPosition, TeamColor teamColor){
+        return pawnMovedTwoSpaces(pawnPosition.getColumn()+1, teamColor);
+    }
+
+
+    boolean checkPassantLeft(ChessPosition pawnPosition, TeamColor teamColor){
+        return pawnMovedTwoSpaces(pawnPosition.getColumn()-1, teamColor);
+    }
+
+    boolean pawnMovedTwoSpaces(int pawnColumn, TeamColor teamColor){
+        ChessPosition thisPawnPosition;
+        ChessPosition pawnStartPosition;
+        if (teamColor == TeamColor.WHITE) {
+            thisPawnPosition = new ChessPosition(4, pawnColumn);
+            pawnStartPosition = new ChessPosition(2, pawnColumn);
+        } else {
+            thisPawnPosition = new ChessPosition(5, pawnColumn);
+            pawnStartPosition = new ChessPosition(7, pawnColumn);
+        }
+
+        if (board.getPiece(thisPawnPosition).getPieceType() == ChessPiece.PieceType.PAWN && board.getPiece(thisPawnPosition).getTeamColor() != teamColor){
+            if (previousBoard.getPiece(pawnStartPosition).getPieceType() == ChessPiece.PieceType.PAWN && previousBoard.getPiece(pawnStartPosition).getTeamColor() != teamColor) {
+                if(board.getPiece(pawnStartPosition) == null && previousBoard.getPiece(thisPawnPosition) == null){
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
 
