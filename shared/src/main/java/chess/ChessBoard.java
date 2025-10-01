@@ -47,6 +47,9 @@ public class ChessBoard {
             moveKing(move);
             return;
         }
+        if (getPiece(move.getStartPosition()).getPieceType() == ChessPiece.PieceType.PAWN){
+            movePawn(move);
+        }
 
         if (getPiece(move.getStartPosition()).getPieceType() == ChessPiece.PieceType.PAWN && move.getPromotionPiece() != null)
             addPiece(move.getEndPosition(), new ChessPiece(getPiece(move.getStartPosition()).getTeamColor(), move.getPromotionPiece()));
@@ -56,6 +59,18 @@ public class ChessBoard {
         removePiece(move.getStartPosition());
     }
 
+    private void movePawn(ChessMove move) {
+        ChessPosition attackedPawn;
+        if (getPiece(move.getStartPosition()).getTeamColor() == ChessGame.TeamColor.WHITE) {
+            attackedPawn = new ChessPosition(move.getEndPosition().getRow() - 1, move.getEndPosition().getColumn());
+        } else {
+            attackedPawn = new ChessPosition(move.getEndPosition().getRow() + 1, move.getEndPosition().getColumn());
+        }
+
+        if (getPiece(move.getEndPosition()) == null && move.getStartPosition().getColumn() != move.getEndPosition().getColumn()) {
+                removePiece(attackedPawn);
+        }
+    }
 
     private void moveKing(ChessMove move) {
         addPiece(move.getEndPosition(), getPiece(move.getStartPosition()));

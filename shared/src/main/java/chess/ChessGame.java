@@ -92,14 +92,13 @@ public class ChessGame {
 
         for (int col = 1; col <= 8; col++){
             ChessPiece thisPiece = board.getPiece(new ChessPosition(row, col));
-            if (thisPiece == null) continue;
+            if (thisPiece == null || thisPiece.getPieceType() != ChessPiece.PieceType.PAWN || thisPiece.getTeamColor() != teamColor) continue;
 
-            if (thisPiece.getPieceType() == ChessPiece.PieceType.PAWN){
-                if(checkPassantRight(new ChessPosition(row, col), teamColor)){
-                    possibleEnPassants.add(new ChessMove(new ChessPosition(5, col), new ChessPosition(moveRow, col+1), null));
-                } else if (checkPassantLeft(new ChessPosition(row, col), teamColor)) {
-                    possibleEnPassants.add(new ChessMove(new ChessPosition(5, col), new ChessPosition(moveRow, col-1), null));
-                }
+            if(checkPassantRight(new ChessPosition(row, col), teamColor)){
+                possibleEnPassants.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(moveRow, col+1), null));
+            } else if (checkPassantLeft(new ChessPosition(row, col), teamColor)) {
+                possibleEnPassants.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(moveRow, col-1), null));
+
             }
         }
 
@@ -116,15 +115,19 @@ public class ChessGame {
     }
 
     boolean pawnMovedTwoSpaces(int pawnColumn, TeamColor teamColor){
+        if (pawnColumn < 1 || pawnColumn > 8) return false;
         ChessPosition thisPawnPosition;
         ChessPosition pawnStartPosition;
+
         if (teamColor == TeamColor.WHITE) {
-            thisPawnPosition = new ChessPosition(4, pawnColumn);
-            pawnStartPosition = new ChessPosition(2, pawnColumn);
-        } else {
             thisPawnPosition = new ChessPosition(5, pawnColumn);
             pawnStartPosition = new ChessPosition(7, pawnColumn);
+        } else {
+            thisPawnPosition = new ChessPosition(4, pawnColumn);
+            pawnStartPosition = new ChessPosition(2, pawnColumn);
         }
+
+        if (board.getPiece(thisPawnPosition) == null) return false;
 
         if (board.getPiece(thisPawnPosition).getPieceType() == ChessPiece.PieceType.PAWN && board.getPiece(thisPawnPosition).getTeamColor() != teamColor){
             if (previousBoard.getPiece(pawnStartPosition).getPieceType() == ChessPiece.PieceType.PAWN && previousBoard.getPiece(pawnStartPosition).getTeamColor() != teamColor) {
@@ -140,7 +143,7 @@ public class ChessGame {
 
     private void tryMove(ChessMove move) throws InvalidMoveException {
         if(board.getPiece(move.getStartPosition()) == null) throw new InvalidMoveException("There's no piece there!");
-        if (board.getPiece(move.getStartPosition()).getPieceType() != ChessPiece.PieceType.KING)
+        if (board.getPiece(move.getStartPosition()).getPieceType() != ChessPiece.PieceType.KING && board.getPiece(move.getStartPosition()).getPieceType() != ChessPiece.PieceType.PAWN)
             if(!board.getPiece(move.getStartPosition()).pieceMoves(board, move.getStartPosition()).contains(move))
                 throw new InvalidMoveException("Invalid move!");
 
