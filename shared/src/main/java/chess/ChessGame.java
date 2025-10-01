@@ -68,7 +68,7 @@ public class ChessGame {
                 if (!isInCheck(currentTurn))
                     goodMoves.add(move);
                 board = new ChessBoard(currentBoard);
-            } catch(InvalidMoveException _) {
+            } catch(InvalidMoveException ex) {
                 board = new ChessBoard(currentBoard);
             }
         }
@@ -181,7 +181,7 @@ public class ChessGame {
         try {
             ChessPosition kingPos = findKing(teamColor);
             return checkForAttackers(teamColor, kingPos);
-        } catch (Exception _){
+        } catch (Exception ex){
             return false;
         }
     }
@@ -458,7 +458,7 @@ public class ChessGame {
         ChessPosition kingPos;
         try {
             kingPos = findKing(teamColor);
-        } catch (Exception _) {
+        } catch (Exception ex) {
             return validCastlingMoves;
         }
         if (board.getPiece(kingPos).hasMoved || kingPos.getColumn() != 5)
