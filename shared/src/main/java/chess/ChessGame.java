@@ -76,8 +76,7 @@ public class ChessGame {
         goodMoves.addAll(enPassant(board.getPiece(startPosition).getTeamColor()));
         return goodMoves;
     }
-    
-    //TODO: this vvv
+
     private Collection<ChessMove> enPassant(TeamColor teamColor) {
         ArrayList<ChessMove> possibleEnPassants = new ArrayList<>();
         int row;
