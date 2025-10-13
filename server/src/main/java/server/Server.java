@@ -1,14 +1,18 @@
 package server;
 
 import com.google.gson.Gson;
+import datamodel.RegistrationResult;
+import datamodel.User;
 import io.javalin.*;
 import io.javalin.http.Context;
+import service.UserService;
 
 import java.util.Map;
 
 public class Server {
 
     private final Javalin server;
+    private UserService userService = new UserService();
 
     public Server() {
         server = Javalin.create(config -> config.staticFiles.add("web"));
@@ -22,10 +26,9 @@ public class Server {
 
     private void register(Context ctx) {
         var serializer = new Gson();
-        var request = serializer.fromJson(ctx.body(), Map.class);
-        request.put("authToken", "cow");
-        var response = serializer.toJson(request);
-        ctx.result(response);
+        var request = serializer.fromJson(ctx.body(), User.class);
+        RegistrationResult response = userService.register(request);
+        ctx.result(serializer.toJson(response));
     }
 
 
