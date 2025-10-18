@@ -17,7 +17,7 @@ public class MemoryDataAccess implements DataAccess{
     @Override
     public AuthData registerUser(UserData userData) throws DataAccessException {
         if (users.containsKey(userData.username())){
-            throw new DataAccessException("Username already exists.");
+            throw new DataAccessException("Error: already taken");
         }
         users.put(userData.username(), userData);
         String authToken = generateAuthToken();
@@ -26,14 +26,13 @@ public class MemoryDataAccess implements DataAccess{
     }
 
     public AuthData login(LoginData loginData) throws DataAccessException {
-        if (!validAuthTokens.containsValue(loginData.username())
-                && users.containsKey(loginData.username())
+        if (users.containsKey(loginData.username())
                 && getUser(loginData.username()).password().equals(loginData.password())) {
             String authToken = generateAuthToken();
             validAuthTokens.put(authToken, loginData.username());
             return new AuthData(loginData.username(), authToken);
         } else {
-            throw new DataAccessException("Error: bad request");
+            throw new DataAccessException("Error: unauthorized");
         }
     }
 

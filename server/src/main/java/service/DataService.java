@@ -11,7 +11,7 @@ public class DataService {
         this.dataAccess = dataAccess;
     }
 
-    public void clear() throws DataAccessException {
+    public void clear()  {
         dataAccess.clearDatabase();
     }
 }

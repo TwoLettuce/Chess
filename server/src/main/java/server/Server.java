@@ -1,5 +1,6 @@
 package server;
 
+import Handler.ExceptionHandler;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import dataaccess.DataAccess;
@@ -12,6 +13,8 @@ import io.javalin.*;
 import io.javalin.http.Context;
 import service.UserService;
 import service.DataService;
+
+import java.util.Map;
 
 public class Server {
 
@@ -39,41 +42,35 @@ public class Server {
 
     private void clear(Context ctx) {
         var serializer = new Gson();
-        try {
-            dataService.clear();
-            ctx.result(serializer.toJson(new JsonObject()));
-        } catch (DataAccessException e) {
-            ctx.status(500).result(serializer.toJson(e.getMessage()));
-        }
+        dataService.clear();
+        ctx.result(serializer.toJson(new JsonObject()));
+//        ctx.status(500).result(serializer.toJson(e.getMessage()));
+
 
     }
 
-    private void register(Context ctx) {
+    private void register(Context ctx) throws DataAccessException{
         var serializer = new Gson();
         var request = serializer.fromJson(ctx.body(), UserData.class);
         AuthData response;
         try {
             response = userService.register(request);
-        } catch (DataAccessException e) {
-            ctx.result(serializer.toJson(e.getMessage()));
-            return;
+            ctx.json(serializer.toJson(response));
+        } catch (DataAccessException e){
+            ctx.status(ExceptionHandler.getErrorCode(e)).json(serializer.toJson(Map.of("message", e.getMessage())));
         }
-
-        ctx.result(serializer.toJson(response));
     }
 
-    private void login(Context ctx) {
+    private void login(Context ctx) throws DataAccessException {
         var serializer = new Gson();
         var request = serializer.fromJson(ctx.body(), LoginData.class);
         AuthData response;
         try {
             response = userService.login(request);
+            ctx.json(serializer.toJson(response));
         } catch (DataAccessException e) {
-            ctx.result(serializer.toJson(e.getMessage()));
-            return;
+            ctx.status(ExceptionHandler.getErrorCode(e)).json(serializer.toJson(Map.of("message", e.getMessage())));
         }
-        ctx.result(serializer.toJson(response));
-
     }
 
     private void logout(Context ctx) {
@@ -81,9 +78,9 @@ public class Server {
         String authToken = serializer.fromJson(ctx.body(), String.class);
         try {
             userService.logout(authToken);
-            ctx.result(serializer.toJson("{}"));
+            ctx.json(serializer.toJson("{}"));
         } catch (DataAccessException e) {
-            ctx.result(serializer.toJson(e.getMessage()));
+            ctx.status(ExceptionHandler.getErrorCode(e)).json(serializer.toJson(Map.of("message", e.getMessage())));
         }
     }
 
