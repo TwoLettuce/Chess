@@ -75,10 +75,10 @@ public class Server {
 
     private void logout(Context ctx) {
         var serializer = new Gson();
-        String authToken = serializer.fromJson(ctx.body(), String.class);
+        var authToken = ctx.header("authorization");
         try {
             userService.logout(authToken);
-            ctx.json(serializer.toJson("{}"));
+            ctx.json(serializer.toJson(new JsonObject()));
         } catch (DataAccessException e) {
             ctx.status(ExceptionHandler.getErrorCode(e)).json(serializer.toJson(Map.of("message", e.getMessage())));
         }
