@@ -2,9 +2,10 @@ package server;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccess;
-import dataaccess.InvalidCredentialsException;
+import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import datamodel.AuthData;
+import datamodel.LoginData;
 import datamodel.UserData;
 import io.javalin.*;
 import io.javalin.http.Context;
@@ -16,8 +17,6 @@ public class Server {
     private UserService userService;
     private DataAccess dataAccess;
 
-    //TODO: assign the userService in the constructor and pass in a DataAccess
-
     public Server() {
         dataAccess = new MemoryDataAccess();
         userService = new UserService(dataAccess);
@@ -27,6 +26,7 @@ public class Server {
         server.delete("db", ctx -> ctx.result("{}"));
 
         server.post("user", this::register);
+        server.post("session", this::login);
 
     }
 
@@ -36,12 +36,26 @@ public class Server {
         AuthData response;
         try {
             response = userService.register(request);
-        } catch (InvalidCredentialsException e) {
-            ctx.result(serializer.toJson("Username, password, or email is empty."));
+        } catch (DataAccessException e) {
+            ctx.result(serializer.toJson(e.getMessage()));
             return;
-        } 
+        }
 
         ctx.result(serializer.toJson(response));
+    }
+
+    private void login(Context ctx) {
+        var serializer = new Gson();
+        var request = serializer.fromJson(ctx.body(), LoginData.class);
+        AuthData response;
+        try {
+            response = userService.login(request);
+        } catch (DataAccessException e) {
+            ctx.result(serializer.toJson(e.getMessage()));
+            return;
+        }
+        ctx.result(serializer.toJson(response));
+
     }
 
 

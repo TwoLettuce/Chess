@@ -2,9 +2,12 @@ package service;
 
 import Handler.ExceptionHandler;
 import dataaccess.DataAccess;
-import dataaccess.InvalidCredentialsException;
+import dataaccess.DataAccessException;
 import datamodel.AuthData;
+import datamodel.LoginData;
 import datamodel.UserData;
+
+import java.util.Objects;
 
 public class UserService {
     private DataAccess dataAccess;
@@ -13,15 +16,16 @@ public class UserService {
         this.dataAccess = dataAccess;
     }
 
-    public AuthData register(UserData userData) throws InvalidCredentialsException {
-        ExceptionHandler.userDataFieldsEmpty(userData);
-
-        AuthData authData = dataAccess.registerUser(userData);
-        return new AuthData(authData.username(), authData.authToken());
+    public AuthData register(UserData userData) throws DataAccessException {
+        ExceptionHandler.verifyFieldsNotEmpty(userData);
+        return dataAccess.registerUser(userData);
     }
 
 
-    public void login(){}
+    public AuthData login(LoginData loginData) throws DataAccessException{
+        ExceptionHandler.verifyFieldsNotEmpty(loginData);
+        return dataAccess.login(loginData);
+    }
 
     public void logout(){}
 }
