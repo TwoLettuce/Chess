@@ -6,16 +6,19 @@ import datamodel.LoginData;
 import datamodel.UserData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import service.DataService;
 import service.UserService;
 
 public class ServiceTests {
     MemoryDataAccess dataAccess = new MemoryDataAccess();
     UserService userService = new UserService(dataAccess);
+    DataService dataService = new DataService(dataAccess);
+    UserData sampleUserData = new UserData("myUsername", "myPassword", "myEmail@cs240.gov");
 
 
     @Test
     public void registerNormalUser() throws DataAccessException {
-        var response = userService.register(new UserData("myUsername", "myPassword", "myEmail@cs240.gov"));
+        var response = userService.register(sampleUserData);
         Assertions.assertNotNull(response);
         Assertions.assertEquals("myUsername", response.username());
     }
@@ -27,9 +30,16 @@ public class ServiceTests {
 
     @Test
     public void loginNormalUser() throws DataAccessException {
-        var response = userService.login(new LoginData("myUsername", "myPassword"));
+        var res = userService.register(sampleUserData);
+        String authToken = res.authToken();
+        var sampleLoginData  = new LoginData(res.username(), sampleUserData.password());
+        userService.logout(authToken);
+        var response = userService.login(sampleLoginData);
         Assertions.assertNotNull(response);
         Assertions.assertEquals("myUsername", response.username());
-        Assertions.assertThrows(DataAccessException.class, () -> userService.login(new LoginData("myUsername", "myPassword")));
+        Assertions.assertThrows(DataAccessException.class,
+                () -> userService.login(new LoginData("myUsername", "myPassword")));
+        Assertions.assertDoesNotThrow(() -> dataService.clear());
+
     }
 }

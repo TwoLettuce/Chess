@@ -6,7 +6,7 @@ import datamodel.UserData;
 
 public class ExceptionHandler {
     public static void verifyFieldsNotEmpty(UserData userData) throws InvalidCredentialsException {
-        if (userData.username().isBlank() || userData.password().isBlank() || userData.email().isBlank()){
+        if (userData.username() == null || userData.password() == null || userData.email() == null){
             throw new InvalidCredentialsException("Field in registration is empty or only whitespace");
         }
     }

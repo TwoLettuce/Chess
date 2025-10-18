@@ -11,7 +11,6 @@ import java.util.Objects;
 
 public class UserService {
     private DataAccess dataAccess;
-    //TODO: create a constructor that uses a DataAccess
     public UserService(DataAccess dataAccess){
         this.dataAccess = dataAccess;
     }
@@ -27,5 +26,7 @@ public class UserService {
         return dataAccess.login(loginData);
     }
 
-    public void logout(){}
+    public void logout(String authToken) throws DataAccessException{
+        dataAccess.logout(authToken);
+    }
 }

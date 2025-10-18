@@ -12,7 +12,7 @@ import java.util.UUID;
 public class MemoryDataAccess implements DataAccess{
 
     private HashMap<String, UserData> users = new HashMap<>();
-    private ArrayList<String> validAuthTokens = new ArrayList<>();
+    private HashMap<String, String> validAuthTokens = new HashMap<>();
 
     @Override
     public AuthData registerUser(UserData userData) throws DataAccessException {
@@ -21,24 +21,37 @@ public class MemoryDataAccess implements DataAccess{
         }
         users.put(userData.username(), userData);
         String authToken = generateAuthToken();
-        validAuthTokens.add(authToken);
+        validAuthTokens.put(authToken, userData.username());
         return new AuthData(userData.username(), authToken);
     }
 
     public AuthData login(LoginData loginData) throws DataAccessException {
-        if (getUser(loginData.username()).password().equals(loginData.password())){
+        if (!validAuthTokens.containsValue(loginData.username())
+                && users.containsKey(loginData.username())
+                && getUser(loginData.username()).password().equals(loginData.password())) {
             String authToken = generateAuthToken();
-            validAuthTokens.add(authToken);
+            validAuthTokens.put(authToken, loginData.username());
             return new AuthData(loginData.username(), authToken);
         } else {
             throw new DataAccessException("Error: bad request");
         }
     }
 
-    public void validateAuthToken(String authToken) throws DataAccessException {
-        if (!validAuthTokens.contains(authToken)){
-            throw new DataAccessException("Error: Not logged in");
+    public void logout(String authToken) throws DataAccessException {
+        if (validateAuthToken(authToken)) {
+            validAuthTokens.remove(authToken);
+        } else {
+            throw new DataAccessException("Error: unauthorized");
         }
+    }
+
+    public void clearDatabase(){
+        validAuthTokens.clear();
+        users.clear();
+    }
+
+    public boolean validateAuthToken(String authToken) {
+        return validAuthTokens.containsKey(authToken);
     }
 
     private String generateAuthToken() {
