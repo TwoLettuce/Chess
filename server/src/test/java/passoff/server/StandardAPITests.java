@@ -62,7 +62,7 @@ public class StandardAPITests {
 
     @Test
     @Order(2)
-    @DisplayName("Normal User Login")
+    @DisplayName("Normal UserData Login")
     public void loginSuccess() {
         TestAuthResult loginResult = serverFacade.login(existingUser);
 
@@ -105,7 +105,7 @@ public class StandardAPITests {
 
     @Test
     @Order(4)
-    @DisplayName("Normal User Registration")
+    @DisplayName("Normal UserData Registration")
     public void registerSuccess() {
         //submit register request
         TestAuthResult registerResult = serverFacade.register(newUser);
@@ -118,7 +118,7 @@ public class StandardAPITests {
 
     @Test
     @Order(5)
-    @DisplayName("Re-Register User")
+    @DisplayName("Re-Register UserData")
     public void registerTwice() {
         //submit register request trying to register existing user
         TestAuthResult registerResult = serverFacade.register(existingUser);
