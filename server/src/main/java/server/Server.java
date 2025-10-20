@@ -94,7 +94,7 @@ public class Server {
         var authToken = ctx.header("authorization");
         try {
             var response = gameService.listGames(authToken);
-            ctx.json(serializer.toJson(response));
+            ctx.json(serializer.toJson(Map.of("games", response)));
         } catch (DataAccessException e) {
             ctx.status(ExceptionHandler.getErrorCode(e)).json(serializer.toJson(Map.of("message", e.getMessage())));
         }
