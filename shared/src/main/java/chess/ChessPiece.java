@@ -267,29 +267,14 @@ public class ChessPiece {
         int row = myPosition.getRow();
         int col = myPosition.getColumn();
 
-        //up-up-right
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row+2, col+1)));
 
-        //up-right-right
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row+1, col+2)));
-
-        //down-right-right
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row-1, col+2)));
-
-        //down-down-right
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row-2, col+1)));
-
-        //down-down-left
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row-2, col-1)));
-
-        //down-left-left
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row-1, col-2)));
-
-        //up-left-left
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row+1, col-2)));
-
-        //up-up-left
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row+2, col -1)));
+        for (int rowOffset : new int[]{-2, -1, 1, 2}) {
+            for (int colOffset : new int[]{-2, -1, 1, 2}) {
+                if (Math.abs(rowOffset) != Math.abs(colOffset)){
+                    legalMoves.add(valMove(board, myPosition, new ChessPosition(row+rowOffset, col+colOffset)));
+                }
+            }
+        }
 
         removeNull(legalMoves);
 
@@ -303,35 +288,18 @@ public class ChessPiece {
         int col = myPosition.getColumn();
         List<ChessMove> legalMoves = new ArrayList<ChessMove>();
 
-        //up
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row + 1, col)));
-
-        //up-right
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row + 1, col + 1)));
-
-        //right
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row, col +1)));
-
-        //down-right
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row -1, col +1)));
-
-        //down
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row -1, col)));
-
-        //down-left
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row-1, col-1)));
-
-        //left
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row, col-1)));
-
-        //up-left
-        legalMoves.add(valMove(board, myPosition, new ChessPosition(row+1, col-1)));
-
+        for (int rowOffset : new int[]{-1, 0, 1}){
+            for (int colOffset : new int[]{-1,0,1}){
+                legalMoves.add(valMove(board, myPosition, new ChessPosition(row + rowOffset, col + colOffset)));
+            }
+        }
 
         legalMoves.removeIf(Objects::isNull);
 
         return legalMoves;
     }
+
+
 
     private Collection<ChessMove> queenMoves(ChessBoard board, ChessPosition myPos){
         ArrayList<ChessMove> legalMoves = new ArrayList<>();

@@ -106,14 +106,17 @@ public class MemoryDataAccess implements DataAccess {
 
     private void validatePlayerColor(GameData game, String playerColor, String username) throws DataAccessException {
         var ex = new DataAccessException("Error: already taken");
+        if (playerColor == null) {
+            throw new DataAccessException("Error: bad request");
+        }
         if (playerColor.equals("WHITE")){
-            if (game.getWhiteUsername() != null || Objects.equals(game.getBlackUsername(), username))
+            if (game.getWhiteUsername() != null)
                 throw ex;
         } else if (playerColor.equals("BLACK")) {
-            if (game.getBlackUsername() != null || Objects.equals(game.getWhiteUsername(), username))
+            if (game.getBlackUsername() != null)
                 throw ex;
         } else {
-            throw ex;
+            throw new DataAccessException("Error: bad request");
         }
     }
 }
