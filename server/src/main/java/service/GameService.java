@@ -18,8 +18,11 @@ public class GameService {
         return dataAccess.listGames(authToken);
     }
 
-    public int createGame(String authToken, String gameName) throws DataAccessException {
-        return dataAccess.createGame(authToken, gameName);
+    public int createGame(String authToken, Object gameName) throws DataAccessException {
+        if (!(gameName instanceof String))
+            throw new DataAccessException("Error: bad request");
+        String gameNameString = gameName.toString();
+        return dataAccess.createGame(authToken, gameNameString);
     }
 
     public void joinGame(String authToken, JoinRequest joinRequest) throws DataAccessException {
