@@ -44,6 +44,7 @@ public class MemoryDataAccess implements DataAccess {
     public void clearDatabase() {
         validAuthTokens.clear();
         users.clear();
+        games.clear();
         nextGameID = 1000;
     }
 
