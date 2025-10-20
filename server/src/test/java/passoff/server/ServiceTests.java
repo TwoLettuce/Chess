@@ -1,13 +1,17 @@
 package passoff.server;
 
+import chess.ChessGame;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
+import datamodel.GameData;
+import datamodel.JoinRequest;
 import datamodel.LoginData;
 import datamodel.UserData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import service.DataService;
+import service.GameService;
 import service.UserService;
 
 import java.util.ArrayList;
@@ -17,14 +21,15 @@ public class ServiceTests {
     MemoryDataAccess dataAccess = new MemoryDataAccess();
     UserService userService = new UserService(dataAccess);
     DataService dataService = new DataService(dataAccess);
+    GameService gameService = new GameService(dataAccess);
     UserData sampleUserData = new UserData("myUsername", "myPassword", "myEmail@cs240.gov");
     UserData existingUser = new UserData("I-exist!", "pa$$w0rd!", "iamironman@cia.gov");
-
+    String auth;
 
     @BeforeEach
     void reset() throws DataAccessException {
         dataService.clear();
-        String auth = userService.register(existingUser).authToken();
+        auth = userService.register(existingUser).authToken();
         userService.logout(auth);
     }
 
@@ -69,4 +74,67 @@ public class ServiceTests {
             Assertions.assertThrows(DataAccessException.class, () -> userService.logout(authToken));
         }
     }
+
+
+    @Test
+    public void createOneGameThenList() throws Exception{
+        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
+        Assertions.assertDoesNotThrow(() -> gameService.createGame(auth, "Game1"));
+        ArrayList<GameData> correctGameList = new ArrayList<>(List.of(new GameData(1000, null, null, "Game1", new ChessGame())));
+        Assertions.assertEquals(correctGameList, gameService.listGames(auth));
+    }
+
+    @Test
+    public void createManyGamesThenList () throws Exception {
+        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
+        for (int i = 0; i < 5; i++){
+            gameService.createGame(auth, "Game" + i);
+        }
+        ArrayList<GameData> correctGameList = new ArrayList<>(List.of(
+                new GameData(1000, null, null, "Game0", new ChessGame()),
+                new GameData(1001, null, null, "Game1", new ChessGame()),
+                new GameData(1002, null, null, "Game2", new ChessGame()),
+                new GameData(1003, null, null, "Game3", new ChessGame()),
+                new GameData(1004, null, null, "Game4", new ChessGame())
+                ));
+        Assertions.assertEquals(correctGameList, gameService.listGames(auth));
+    }
+
+    @Test
+    public void listOfZeroGames() throws DataAccessException {
+        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
+        Assertions.assertEquals(new ArrayList<GameData>(), gameService.listGames(auth));
+    }
+
+    @Test
+    public void testJoinGameWhite() throws DataAccessException {
+        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
+        gameService.createGame(auth, "Game");
+        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth, new JoinRequest("WHITE", 1000)));
+    }
+
+    @Test
+    public void testJoinGameBlack() throws DataAccessException {
+        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
+        gameService.createGame(auth, "Game");
+        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth, new JoinRequest("BLACK", 1000)));
+    }
+
+    @Test
+    public void testJoinGameBothPlayers() throws DataAccessException {
+        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
+        String auth2 = userService.register(new UserData("username", "pass", "email")).authToken();
+        gameService.createGame(auth, "Game");
+        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth, new JoinRequest("BLACK", 1000)));
+        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth2, new JoinRequest("WHITE", 1000)));
+    }
+
+    @Test
+    public void testJoinGameBothPlayersAreSamePlayer() throws DataAccessException {
+        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
+        int gameID = gameService.createGame(auth, "Game");
+        gameService.joinGame(auth, new JoinRequest("WHITE", gameID));
+        Assertions.assertThrows(DataAccessException.class, () -> gameService.joinGame(auth, new JoinRequest("BLACK", gameID)));
+    }
+
 }
