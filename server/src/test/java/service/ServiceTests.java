@@ -1,4 +1,4 @@
-package passoff.server;
+package service;
 
 import chess.ChessGame;
 import dataaccess.DataAccessException;
@@ -10,9 +10,6 @@ import datamodel.UserData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import service.DataService;
-import service.GameService;
-import service.UserService;
 
 import javax.xml.crypto.Data;
 import java.util.ArrayList;
@@ -52,8 +49,12 @@ public class ServiceTests {
         var authData = userService.login(sampleLoginData);
         Assertions.assertNotNull(authData);
         Assertions.assertEquals(existingUser.username(), authData.username());
-        Assertions.assertThrows(DataAccessException.class,
-                () -> userService.login(new LoginData("myUsername", "myPassword")));
+    }
+
+    @Test
+    public void loginUserNotRegistered() throws DataAccessException{
+        userService.login(new LoginData(existingUser.username(), existingUser.password()));
+        Assertions.assertThrows(DataAccessException.class, () -> userService.login((new LoginData("non existent username", "non existent password"))));
     }
 
 
@@ -74,6 +75,11 @@ public class ServiceTests {
         for (var authToken : authTokens) {
             Assertions.assertThrows(DataAccessException.class, () -> userService.logout(authToken));
         }
+    }
+
+    @Test
+    public void logoutUserNotLoggedIn() {
+        Assertions.assertThrows(DataAccessException.class, () -> userService.logout(auth));
     }
 
 
@@ -99,6 +105,18 @@ public class ServiceTests {
                 new GameData(1004, null, null, "Game4", new ChessGame())
                 ));
         Assertions.assertEquals(correctGameList, gameService.listGames(auth));
+    }
+
+    @Test
+    public void testClear() throws DataAccessException {
+        MemoryDataAccess emptyData = new MemoryDataAccess();
+        DataService dataServiceForEmptyData = new DataService(emptyData);
+        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
+
+        gameService.createGame(auth, "game1");
+        gameService.createGame(auth, "game2");
+        Assertions.assertDoesNotThrow(dataService::clear);
+        Assertions.assertDoesNotThrow(dataServiceForEmptyData::clear);
     }
 
     @Test
@@ -146,5 +164,4 @@ public class ServiceTests {
         gameService.joinGame(auth, new JoinRequest("WHITE", gameID));
         Assertions.assertThrows(DataAccessException.class, () -> gameService.joinGame(auth2, new JoinRequest("WHITE", gameID)));
     }
-
 }
