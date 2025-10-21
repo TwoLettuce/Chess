@@ -302,10 +302,10 @@ public class ChessPiece {
         legalMoves.removeIf(Objects::isNull);
     }
 
-    private boolean checkRowAndCol(int row, int col){
+    public static boolean checkRowAndCol(int row, int col){
         return row <= 8 && row >= 1 && col <= 8 && col >= 1;
     }
-    
+
     @Override
     public String toString() {
         if(pieceColor == ChessGame.TeamColor.WHITE){
