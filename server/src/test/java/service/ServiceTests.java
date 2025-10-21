@@ -54,7 +54,7 @@ public class ServiceTests {
     @Test
     public void loginUserNotRegistered() throws DataAccessException{
         userService.login(new LoginData(existingUser.username(), existingUser.password()));
-        Assertions.assertThrows(DataAccessException.class, () -> userService.login((new LoginData("non existent username", "non existent password"))));
+        Assertions.assertThrows(DataAccessException.class, () -> userService.login((new LoginData("non existent", "non existent"))));
     }
 
 
