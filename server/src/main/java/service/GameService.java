@@ -19,8 +19,9 @@ public class GameService {
     }
 
     public int createGame(String authToken, Object gameName) throws DataAccessException {
-        if (!(gameName instanceof String))
+        if (!(gameName instanceof String)) {
             throw new DataAccessException("Error: bad request");
+        }
         String gameNameString = gameName.toString();
         return dataAccess.createGame(authToken, gameNameString);
     }

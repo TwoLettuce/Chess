@@ -51,10 +51,11 @@ public class ChessBoard {
             movePawn(move);
         }
 
-        if (getPiece(move.getStartPosition()).getPieceType() == ChessPiece.PieceType.PAWN && move.getPromotionPiece() != null)
+        if (getPiece(move.getStartPosition()).getPieceType() == ChessPiece.PieceType.PAWN && move.getPromotionPiece() != null) {
             addPiece(move.getEndPosition(), new ChessPiece(getPiece(move.getStartPosition()).getTeamColor(), move.getPromotionPiece()));
-        else
+        } else {
             addPiece(move.getEndPosition(), getPiece(move.getStartPosition()));
+        }
 
         removePiece(move.getStartPosition());
     }
@@ -93,10 +94,12 @@ public class ChessBoard {
         StringBuilder boardString = new StringBuilder();
         for(int i = 7; i >=0; i--){
             for (int n = 0; n < 8; n++){
-                if (board[i][n] == null)
+                if (board[i][n] == null) {
                     boardString.append("-");
-                else
+                }
+                else {
                     boardString.append(board[i][n].toString());
+                }
             }
             boardString.append("\n");
         }

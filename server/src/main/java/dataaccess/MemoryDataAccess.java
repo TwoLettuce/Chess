@@ -49,8 +49,9 @@ public class MemoryDataAccess implements DataAccess {
     }
 
     public void validateAuthToken(String authToken) throws DataAccessException {
-        if (!validAuthTokens.containsKey(authToken))
+        if (!validAuthTokens.containsKey(authToken)) {
             throw new DataAccessException("Error: unauthorized");
+        }
     }
 
     private String generateAuthToken() {
@@ -98,8 +99,9 @@ public class MemoryDataAccess implements DataAccess {
 
     private int findGameIndex(int gameID) throws DataAccessException {
         for (int i = 0; i < games.size(); i++){
-            if (games.get(i).getGameID() == gameID)
+            if (games.get(i).getGameID() == gameID) {
                 return i;
+            }
         }
         throw new DataAccessException("Error: bad request");
     }
@@ -110,11 +112,9 @@ public class MemoryDataAccess implements DataAccess {
             throw new DataAccessException("Error: bad request");
         }
         if (playerColor.equals("WHITE")){
-            if (game.getWhiteUsername() != null)
-                throw ex;
+            if (game.getWhiteUsername() != null) {throw ex;}
         } else if (playerColor.equals("BLACK")) {
-            if (game.getBlackUsername() != null)
-                throw ex;
+            if (game.getBlackUsername() != null) {throw ex;}
         } else {
             throw new DataAccessException("Error: bad request");
         }
