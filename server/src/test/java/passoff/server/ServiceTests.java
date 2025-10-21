@@ -14,6 +14,7 @@ import service.DataService;
 import service.GameService;
 import service.UserService;
 
+import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -134,7 +135,16 @@ public class ServiceTests {
         auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
         int gameID = gameService.createGame(auth, "Game");
         gameService.joinGame(auth, new JoinRequest("WHITE", gameID));
-        Assertions.assertThrows(DataAccessException.class, () -> gameService.joinGame(auth, new JoinRequest("BLACK", gameID)));
+        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth, new JoinRequest("BLACK", gameID)));
+    }
+
+    @Test
+    public void testJoinGameColorTaken() throws DataAccessException {
+        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
+        String auth2 = userService.register(new UserData("IAmYourFather", "NOOOOO!", "star.wars@george.lucas")).authToken();
+        int gameID = gameService.createGame(auth, "Game");
+        gameService.joinGame(auth, new JoinRequest("WHITE", gameID));
+        Assertions.assertThrows(DataAccessException.class, () -> gameService.joinGame(auth2, new JoinRequest("WHITE", gameID)));
     }
 
 }

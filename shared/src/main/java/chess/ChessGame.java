@@ -118,6 +118,7 @@ public class ChessGame {
         if (pawnColumn < 1 || pawnColumn > 8) return false;
         ChessPosition thisPawnPosition;
         ChessPosition pawnStartPosition;
+        ChessPiece.PieceType pawn = ChessPiece.PieceType.PAWN;
 
         if (teamColor == TeamColor.WHITE) {
             thisPawnPosition = new ChessPosition(5, pawnColumn);
@@ -129,11 +130,9 @@ public class ChessGame {
 
         if (board.getPiece(thisPawnPosition) == null || previousBoard.getPiece(pawnStartPosition) == null) return false;
 
-        if (board.getPiece(thisPawnPosition).getPieceType() == ChessPiece.PieceType.PAWN && board.getPiece(thisPawnPosition).getTeamColor() != teamColor){
-            if (previousBoard.getPiece(pawnStartPosition).getPieceType() == ChessPiece.PieceType.PAWN && previousBoard.getPiece(pawnStartPosition).getTeamColor() != teamColor) {
-                if(board.getPiece(pawnStartPosition) == null && previousBoard.getPiece(thisPawnPosition) == null){
-                    return true;
-                }
+        if (board.getPiece(thisPawnPosition).getPieceType() == pawn && board.getPiece(thisPawnPosition).getTeamColor() != teamColor){
+            if (previousBoard.getPiece(pawnStartPosition).getPieceType() == pawn && previousBoard.getPiece(pawnStartPosition).getTeamColor() != teamColor) {
+                return board.getPiece(pawnStartPosition) == null && previousBoard.getPiece(thisPawnPosition) == null;
             }
         }
 
@@ -280,22 +279,23 @@ public class ChessGame {
         //check to see if any collected pieces put the king in danger
         row = myPos.getRow();
         col = myPos.getColumn();
+        int pawnRowOffset;
+
+        if(TeamColor.WHITE == teamColor){
+            pawnRowOffset = 1;
+        } else {
+            pawnRowOffset = -1;
+        }
+
         for (var piece : piecesFound){
             if (piece.getTeamColor() != teamColor){
                 switch (piece.getPieceType()){
                     case QUEEN, BISHOP:
                         return true;
                     case PAWN:
-                        if (teamColor == TeamColor.WHITE) {
-                            if (board.getPiece(new ChessPosition(row + 1, col + 1)) == piece ||
-                                    board.getPiece(new ChessPosition(row + 1, col - 1)) == piece) {
-                                return true;
-                            }
-                        } else {
-                            if (board.getPiece(new ChessPosition(row - 1, col + 1)) == piece ||
-                                    board.getPiece(new ChessPosition(row - 1, col - 1)) == piece) {
-                                return true;
-                            }
+                        if (board.getPiece(new ChessPosition(row + pawnRowOffset, col + 1)) == piece ||
+                                board.getPiece(new ChessPosition(row + pawnRowOffset, col - 1)) == piece) {
+                            return true;
                         }
                 }
             }

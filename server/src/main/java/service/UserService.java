@@ -1,13 +1,11 @@
 package service;
 
-import Handler.ExceptionHandler;
+import handler.ExceptionHandler;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import datamodel.AuthData;
 import datamodel.LoginData;
 import datamodel.UserData;
-
-import java.util.Objects;
 
 public class UserService {
     private DataAccess dataAccess;

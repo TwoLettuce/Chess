@@ -1,6 +1,6 @@
 package server;
 
-import Handler.ExceptionHandler;
+import handler.ExceptionHandler;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import dataaccess.DataAccess;
@@ -16,7 +16,6 @@ import service.GameService;
 import service.UserService;
 import service.DataService;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 public class Server {

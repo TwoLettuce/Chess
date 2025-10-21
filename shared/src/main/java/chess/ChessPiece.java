@@ -1,6 +1,5 @@
 package chess;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 
@@ -31,9 +30,6 @@ public class ChessPiece {
         ROOK,
         PAWN
     }
-
-
-
 
     /**
      * @return Which team this chess piece belongs to
@@ -80,11 +76,8 @@ public class ChessPiece {
                 return new ArrayList<>();
             }
         }
-
-
     }
 
-    //TODO: Clean up pawnMoves by reducing code duplication
     private Collection<ChessMove> pawnMoves(ChessBoard board, ChessPosition myPosition){
         ArrayList<ChessMove> legalMoves = new ArrayList<ChessMove>();
 
@@ -116,14 +109,14 @@ public class ChessPiece {
         }
 
 
-        //forward and left (capture only)
-        if (col-1 >= 1 && board.getPiece(new ChessPosition(row + movementDirection, col-1)) != null && board.getPiece(new ChessPosition(row + 1*movementDirection, col-1)).getTeamColor() != teamColor){
-            legalMoves.add(new ChessMove(myPosition, new ChessPosition(row + movementDirection, col-1), null));
-        }
-
-        //forward and right (capture only)
-        if (col+1 <=8 && board.getPiece(new ChessPosition(row + movementDirection, col+1)) != null && board.getPiece(new ChessPosition(row + 1*movementDirection, col+1)).getTeamColor() != teamColor){
-            legalMoves.add(new ChessMove(myPosition, new ChessPosition(row + movementDirection, col+1), null));
+        //pawn captures
+        for (int colOffset : new int[] {1,-1}) {
+            if (checkRowAndCol(row + movementDirection, col + colOffset)) {
+                ChessPiece pieceAtDestination = board.getPiece(new ChessPosition(row + movementDirection, col + colOffset));
+                if (pieceAtDestination != null && pieceAtDestination.getTeamColor() != teamColor) {
+                    legalMoves.add(new ChessMove(myPosition, new ChessPosition(row + movementDirection, col + colOffset), null));
+                }
+            }
         }
 
         //Add promotion options, if applicable
@@ -137,40 +130,6 @@ public class ChessPiece {
                 legalMoves.remove(move);
             }
         }
-//        //black pawn logic
-//        else if(board.getPiece(myPosition).getTeamColor() == ChessGame.TeamColor.BLACK) {
-//            //forward
-//            if (board.getPiece(new ChessPosition(row - 1, col)) == null) {
-//                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row - 1, col), null));
-//
-//                //forward 2 spaces
-//                if (row == 7 && board.getPiece(new ChessPosition(row-2, col)) == null){
-//                    legalMoves.add(new ChessMove(myPosition, new ChessPosition(row - 2, col), null));
-//                }
-//            }
-//            //forward and left (capture only)
-//            if (col-1 >= 1 && board.getPiece(new ChessPosition(row-1, col-1))!= null && board.getPiece(new ChessPosition(row-1, col-1)).getTeamColor() == ChessGame.TeamColor.WHITE){
-//                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row-1, col-1), null));
-//            }
-//
-//            //forward and right (capture only)
-//            if (col+1 <= 8 && board.getPiece(new ChessPosition(row-1, col+1)) != null && board.getPiece(new ChessPosition(row-1, col+1)).getTeamColor() == ChessGame.TeamColor.WHITE){
-//                legalMoves.add(new ChessMove(myPosition, new ChessPosition(row-1, col+1), null));
-//            }
-//
-//            //add promotion options, if applicable
-//            ArrayList<ChessMove> currentMovesList = (ArrayList<ChessMove>) legalMoves.clone();
-//            for (ChessMove move : currentMovesList){
-//                if (move.getEndPosition().getRow() == 1){
-//                    for (PieceType i : PieceType.values()){
-//                        if (i != PieceType.KING && i != PieceType.PAWN)
-//                            legalMoves.add(new ChessMove(myPosition, move.getEndPosition(), i));
-//                    }
-//                    legalMoves.remove(move);
-//                }
-//            }
-//
-//        }
 
         return legalMoves;
     }
@@ -222,7 +181,7 @@ public class ChessPiece {
     }
 
 
-    private Collection<ChessMove> moveDiaganolly(ChessBoard board, ChessPosition myPos){
+    private Collection<ChessMove> moveDiagonally(ChessBoard board, ChessPosition myPos){
         ArrayList<ChessMove> legalMoves = new ArrayList<ChessMove>();
         int row = myPos.getRow();
         int col = myPos.getColumn();
@@ -282,15 +241,13 @@ public class ChessPiece {
     }
 
     private Collection<ChessMove> bishopMoves(ChessBoard board, ChessPosition myPos){
-        return moveDiaganolly(board, myPos);
+        return moveDiagonally(board, myPos);
     }
 
     private Collection<ChessMove> knightMoves(ChessBoard board, ChessPosition myPosition){
         ArrayList<ChessMove> legalMoves = new ArrayList<ChessMove>();
         int row = myPosition.getRow();
         int col = myPosition.getColumn();
-
-
         for (int rowOffset : new int[]{-2, -1, 1, 2}) {
             for (int colOffset : new int[]{-2, -1, 1, 2}) {
                 if (Math.abs(rowOffset) != Math.abs(colOffset)){
@@ -298,12 +255,8 @@ public class ChessPiece {
                 }
             }
         }
-
         removeNull(legalMoves);
-
         return legalMoves;
-
-
     }
 
     private Collection<ChessMove> kingMoves(ChessBoard board, ChessPosition myPosition){
@@ -316,7 +269,6 @@ public class ChessPiece {
                 legalMoves.add(valMove(board, myPosition, new ChessPosition(row + rowOffset, col + colOffset)));
             }
         }
-
         legalMoves.removeIf(Objects::isNull);
 
         return legalMoves;
@@ -328,7 +280,7 @@ public class ChessPiece {
         ArrayList<ChessMove> legalMoves = new ArrayList<>();
 
         legalMoves.addAll(moveCardinally(board, myPos));
-        legalMoves.addAll(moveDiaganolly(board, myPos));
+        legalMoves.addAll(moveDiagonally(board, myPos));
 
         return legalMoves;
     }
@@ -349,6 +301,9 @@ public class ChessPiece {
         legalMoves.removeIf(Objects::isNull);
     }
 
+    private boolean checkRowAndCol(int row, int col){
+        return row <= 8 && row >= 1 && col <= 8 && col >= 1;
+    }
 
 
     @Override

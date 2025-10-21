@@ -1,4 +1,4 @@
-package Handler;
+package handler;
 
 import dataaccess.InvalidCredentialsException;
 import datamodel.LoginData;
