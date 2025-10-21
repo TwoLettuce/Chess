@@ -123,9 +123,10 @@ public class ChessPiece {
         ArrayList<ChessMove> currentMovesList = new ArrayList<>(legalMoves);
         for (ChessMove move : currentMovesList){
             if (move.getEndPosition().getRow() == promotionRow){
-                for (PieceType i : PieceType.values()){
-                    if (i != PieceType.KING && i != PieceType.PAWN)
-                        legalMoves.add(new ChessMove(myPosition, move.getEndPosition(), i));
+                for (PieceType promotionPiece : PieceType.values()) {
+                    if (promotionPiece != PieceType.KING && promotionPiece != PieceType.PAWN) {
+                        legalMoves.add(new ChessMove(myPosition, move.getEndPosition(), promotionPiece));
+                    }
                 }
                 legalMoves.remove(move);
             }
@@ -304,8 +305,7 @@ public class ChessPiece {
     private boolean checkRowAndCol(int row, int col){
         return row <= 8 && row >= 1 && col <= 8 && col >= 1;
     }
-
-
+    
     @Override
     public String toString() {
         if(pieceColor == ChessGame.TeamColor.WHITE){

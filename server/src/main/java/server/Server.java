@@ -102,9 +102,6 @@ public class Server {
     private void createGame(Context ctx) {
         var serializer = new Gson();
         var authToken = ctx.header("authorization");
-        /*TODO: change line 109 to only return the value retrieved by get("gameName"), then
-          TODO: change gameService.createGame to take gameName as an Object, throw an exception if null, otherwise convert it to a string and continue
-        * */
         Object gameName = serializer.fromJson(ctx.body(), Map.class).get("gameName");
         try {
             var gameID = gameService.createGame(authToken, gameName);
