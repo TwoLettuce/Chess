@@ -1,11 +1,13 @@
 package server;
 
+import dataaccess.MySQLDataAccess;
+import dataaccess.MySQLDataAccess;
 import handler.ExceptionHandler;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
-import dataaccess.MemoryDataAccess;
+//import dataaccess.MemoryDataAccess;
 import datamodel.AuthData;
 import datamodel.JoinRequest;
 import datamodel.LoginData;
@@ -15,19 +17,24 @@ import io.javalin.http.Context;
 import service.GameService;
 import service.UserService;
 import service.DataService;
-
 import java.util.Map;
 
 public class Server {
 
+
+
     private final Javalin server;
-    private UserService userService;
-    private DataService dataService;
-    private GameService gameService;
+    private final UserService userService;
+    private final DataService dataService;
+    private final GameService gameService;
     private DataAccess dataAccess;
 
     public Server() {
-        dataAccess = new MemoryDataAccess();
+        try {
+            dataAccess = new MySQLDataAccess();
+        } catch (Exception ex) {
+            System.exit(-1);
+        }
         userService = new UserService(dataAccess);
         dataService = new DataService(dataAccess);
         gameService = new GameService(dataAccess);

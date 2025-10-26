@@ -39,7 +39,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void registerInvalidUser() throws DataAccessException {
+    public void registerInvalidUser() {
         Assertions.assertThrows(DataAccessException.class, () -> userService.register(new UserData("", " ", ",. . 09")));
     }
 
