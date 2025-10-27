@@ -1,12 +1,12 @@
 package dataaccess;
 
-import chess.ChessGame;
 import datamodel.AuthData;
 import datamodel.GameData;
 import datamodel.LoginData;
 import datamodel.UserData;
 
 import java.util.Collection;
+import java.util.UUID;
 
 public interface DataAccess {
     AuthData registerUser(UserData userData) throws DataAccessException;
@@ -18,4 +18,7 @@ public interface DataAccess {
     Collection<GameData> listGames(String authToken) throws DataAccessException;
     int createGame(String authToken, String gameName) throws DataAccessException;
     void joinGame(String authToken, String playerColor, int gameID) throws DataAccessException;
+    static String generateAuthToken(){
+        return UUID.randomUUID().toString();
+    }
 }

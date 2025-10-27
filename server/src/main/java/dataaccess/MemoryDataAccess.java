@@ -20,7 +20,7 @@ public class MemoryDataAccess implements DataAccess {
             throw new DataAccessException("Error: already taken");
         }
         users.put(userData.username(), userData);
-        String authToken = generateAuthToken();
+        String authToken = DataAccess.generateAuthToken();
         validAuthTokens.put(authToken, userData.username());
         return new AuthData(userData.username(), authToken);
     }
@@ -28,7 +28,7 @@ public class MemoryDataAccess implements DataAccess {
     public AuthData login(LoginData loginData) throws DataAccessException {
         if (users.containsKey(loginData.username())
                 && getUser(loginData.username()).password().equals(loginData.password())) {
-            String authToken = generateAuthToken();
+            String authToken = DataAccess.generateAuthToken();
             validAuthTokens.put(authToken, loginData.username());
             return new AuthData(loginData.username(), authToken);
         } else {
@@ -52,10 +52,6 @@ public class MemoryDataAccess implements DataAccess {
         if (!validAuthTokens.containsKey(authToken)) {
             throw new DataAccessException("Error: unauthorized");
         }
-    }
-
-    private String generateAuthToken() {
-        return UUID.randomUUID().toString();
     }
 
     @Override

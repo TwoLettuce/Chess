@@ -1,7 +1,6 @@
 package server;
 
 import dataaccess.MySQLDataAccess;
-import dataaccess.MySQLDataAccess;
 import handler.ExceptionHandler;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
