@@ -13,7 +13,6 @@ public interface DataAccess {
     AuthData login(LoginData loginData) throws DataAccessException;
     void logout(String authToken) throws DataAccessException;
     UserData getUser(String username);
-    void validateAuthToken(String authToken) throws DataAccessException;
     void clearDatabase();
     Collection<GameData> listGames(String authToken) throws DataAccessException;
     int createGame(String authToken, String gameName) throws DataAccessException;

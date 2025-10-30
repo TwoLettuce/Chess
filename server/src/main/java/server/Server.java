@@ -48,7 +48,6 @@ public class Server {
         server.get("game", this::listGames);
         server.post("game", this::createGame);
         server.put("game", this::joinGame);
-
     }
 
 
@@ -56,7 +55,6 @@ public class Server {
         var serializer = new Gson();
         dataService.clear();
         ctx.result(serializer.toJson(new JsonObject()));
-//        ctx.status(500).result(serializer.toJson(e.getMessage()));
     }
 
     private void register(Context ctx) throws DataAccessException{

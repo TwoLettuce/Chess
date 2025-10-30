@@ -45,10 +45,10 @@ public class MemoryDataAccess implements DataAccess {
         validAuthTokens.clear();
         users.clear();
         games.clear();
-        nextGameID = 1000;
+        nextGameID = 1;
     }
 
-    public void validateAuthToken(String authToken) throws DataAccessException {
+    private void validateAuthToken(String authToken) throws DataAccessException {
         if (!validAuthTokens.containsKey(authToken)) {
             throw new DataAccessException("Error: unauthorized");
         }
