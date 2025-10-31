@@ -50,7 +50,6 @@ public class MySQLDataAccess implements DataAccess {
 
         } catch (SQLException ex){
             throw new ServerConnectionInterruptException("Error: connection interrupted");
-
         }
     }
 
@@ -130,7 +129,7 @@ public class MySQLDataAccess implements DataAccess {
     }
 
     @Override
-    public void clearDatabase() {
+    public void clearDatabase() throws DataAccessException {
         //TRUNCATE TABLE <tableName>;
         try (var conn = DatabaseManager.getConnection()){
             try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE users")){
@@ -143,7 +142,7 @@ public class MySQLDataAccess implements DataAccess {
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException | DataAccessException ex) {
-            System.exit(-1);
+            throw new DataAccessException("Error: server error");
         }
     }
 

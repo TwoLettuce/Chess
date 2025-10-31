@@ -32,7 +32,7 @@ public class Server {
         try {
             dataAccess = new MySQLDataAccess();
         } catch (Exception ex) {
-            System.exit(-1);
+            System.out.println("ouch");
         }
         userService = new UserService(dataAccess);
         dataService = new DataService(dataAccess);
@@ -53,8 +53,12 @@ public class Server {
 
     private void clear(Context ctx) {
         var serializer = new Gson();
-        dataService.clear();
-        ctx.result(serializer.toJson(new JsonObject()));
+        try {
+            dataService.clear();
+            ctx.result(serializer.toJson(new JsonObject()));
+        } catch (DataAccessException e){
+            ctx.status(ExceptionHandler.getErrorCode(e)).json(serializer.toJson(Map.of("message", e.getMessage())));
+        }
     }
 
     private void register(Context ctx) throws DataAccessException{
