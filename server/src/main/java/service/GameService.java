@@ -4,6 +4,7 @@ import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import datamodel.GameData;
 import datamodel.JoinRequest;
+import handler.ExceptionHandler;
 
 import java.util.Collection;
 
@@ -27,6 +28,7 @@ public class GameService {
     }
 
     public void joinGame(String authToken, JoinRequest joinRequest) throws DataAccessException {
+        ExceptionHandler.validateColor(joinRequest.playerColor());
         dataAccess.joinGame(authToken, joinRequest.playerColor(), joinRequest.gameID());
     }
 

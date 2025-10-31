@@ -6,11 +6,16 @@ import datamodel.AuthData;
 import datamodel.GameData;
 import datamodel.LoginData;
 import datamodel.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MySQLDataAccess implements DataAccess {
 
@@ -18,26 +23,34 @@ public class MySQLDataAccess implements DataAccess {
         try {
             configureDatabase();
         } catch (DataAccessException ex) {
-            System.out.println(ex.getMessage());
-            System.exit(-1);
+            System.out.println("Something's wrong");
+            //throw new DataAccessException("");
         }
     }
 
     @Override
     public AuthData registerUser(UserData userData) throws DataAccessException {
-        String authToken = DataAccess.generateAuthToken();
         try (var conn = DatabaseManager.getConnection()){
+            try (var preparedStatement = conn.prepareStatement("SELECT username FROM users WHERE username = ?")){
+                preparedStatement.setString(1, userData.username());
+                var result = preparedStatement.executeQuery();
+                if (result.next()){
+                    throw new DataAccessException("Error: Forbidden");
+                }
+            }
             try (var preparedStatement = conn.prepareStatement("INSERT INTO users (username, password, email) VALUES(?, ?, ?)")){
                 preparedStatement.setString(1, userData.username());
-                preparedStatement.setString(2, userData.password());
+                preparedStatement.setString(2, obfuscatePassword(userData.password()));
                 preparedStatement.setString(3, userData.email());
                 preparedStatement.executeUpdate();
             }
 
+            String authToken = DataAccess.generateAuthToken();
             return addAuthDataToDatabase(conn, authToken, userData.username());
 
         } catch (SQLException ex){
-            throw new DataAccessException("Error: already taken");
+            throw new ServerConnectionInterruptException("Error: connection interrupted");
+
         }
     }
 
@@ -46,19 +59,21 @@ public class MySQLDataAccess implements DataAccess {
         //INSERT INTO validAuthData VALUES (<authToken>, <username>);
         AuthData authData;
         try (var conn = DatabaseManager.getConnection()) {
-            try (var verifyLoginDataStatement = conn.prepareStatement("SELECT * FROM users WHERE username = ? AND password = ?")){
+            try (var verifyLoginDataStatement = conn.prepareStatement("SELECT * FROM users WHERE username = ?")){
                 verifyLoginDataStatement.setString(1, loginData.username());
-                verifyLoginDataStatement.setString(2, loginData.password());
                 var resultSet = verifyLoginDataStatement.executeQuery();
                 if (resultSet.next()) {
-                    String authToken = DataAccess.generateAuthToken();
-                    return addAuthDataToDatabase(conn, authToken, loginData.username());
-                } else {
-                    throw new DataAccessException("Error: unauthorized");
+                    if (BCrypt.checkpw(loginData.password(), resultSet.getString(2))) {
+                        String authToken = DataAccess.generateAuthToken();
+                        return addAuthDataToDatabase(conn, authToken, loginData.username());
+                    }
                 }
+                    throw new DataAccessException("Error: unauthorized");
+
             }
         } catch (SQLException ex) {
-            throw new DataAccessException("Error: unauthorized");
+            throw new ServerConnectionInterruptException("Error: connection interrupted");
+
         }
     }
 
@@ -72,14 +87,9 @@ public class MySQLDataAccess implements DataAccess {
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException ex){
-            throw new DataAccessException("Error: unauthorized");
-        }
-    }
+            throw new ServerConnectionInterruptException("Error: connection interrupted");
 
-    @Override
-    public UserData getUser(String username) {
-        //SELECT * FROM userData WHERE username = <username>;
-        return null;
+        }
     }
 
     private String validateAuthToken(String authToken) throws DataAccessException {
@@ -91,12 +101,32 @@ public class MySQLDataAccess implements DataAccess {
                 if (!result.next()){
                     throw new DataAccessException("Error: unauthorized");
                 } else {
-                    return result.getString(1);
+                    return result.getString(2);
                 }
             }
         } catch (SQLException ex) {
-            throw new DataAccessException("Error: unauthorized");
+            throw new ServerConnectionInterruptException("Error: connection interrupted");
+
         }
+    }
+
+    private Map<String, String> getUsersInGame(int gameID) throws DataAccessException {
+        HashMap<String, String> users = new HashMap<>();
+        try (var conn = DatabaseManager.getConnection()){
+            try (var preparedStatement = conn.prepareStatement("SELECT * FROM games WHERE gameID = ?")){
+                preparedStatement.setInt(1, gameID);
+                var response = preparedStatement.executeQuery();
+                if (response.next()){
+                    users.put("whiteUsername", response.getString(2));
+                    users.put("blackUsername", response.getString(3));
+                } else {
+                    throw new DataAccessException("Error: bad request");
+                }
+            }
+        } catch (SQLException ex) {
+            throw new ServerConnectionInterruptException("Error: connection interrupted");
+        }
+        return users;
     }
 
     @Override
@@ -119,8 +149,22 @@ public class MySQLDataAccess implements DataAccess {
 
     @Override
     public Collection<GameData> listGames(String authToken) throws DataAccessException {
-        //SELECT * FROM gameData;
-        return null;
+        validateAuthToken(authToken);
+        GameData thisGameData;
+        ArrayList<GameData> listOfGames = new ArrayList<>();
+        try (var conn = DatabaseManager.getConnection()){
+            try (var preparedStatement = conn.prepareStatement("SELECT * FROM games")){
+                var response = preparedStatement.executeQuery();
+                while (response.next()){
+                    thisGameData = buildGameFromResultSet(response);
+                    listOfGames.add(thisGameData);
+                }
+            }
+        } catch (SQLException ex) {
+            throw new ServerConnectionInterruptException("Error: connection interrupted");
+
+        }
+        return listOfGames;
     }
 
     @Override
@@ -138,39 +182,36 @@ public class MySQLDataAccess implements DataAccess {
                 }
             }
         } catch (SQLException ex) {
-            throw new DataAccessException("Error: bad request");
+            throw new ServerConnectionInterruptException("Error: connection interrupted");
+
         }
         return 0;
     }
 
     @Override
     public void joinGame(String authToken, String playerColor, int gameID) throws DataAccessException {
+        var users = getUsersInGame(gameID);
         //UPDATE gameData SET whiteUsername/blackUsername = <username> WHERE gameID = <gameID>;
         String username = validateAuthToken(authToken);
         try (var conn = DatabaseManager.getConnection()) {
-            try (var preparedStatement = conn.prepareStatement("UPDATE games SET whiteUsername = ? WHERE gameID = ?")){
+            String userColor;
+            if (playerColor.equals("WHITE") && users.get("whiteUsername") == null) {
+                userColor = "whiteUsername";
+            } else if (playerColor.equals("BLACK") && users.get("blackUsername") == null) {
+                userColor = "blackUsername";
+            } else {
+                throw new DataAccessException("Error: already taken");
+            }
+            try (var preparedStatement = conn.prepareStatement("UPDATE games SET " + userColor + " = ? WHERE gameID = ?")){
                 preparedStatement.setString(1, username);
                 preparedStatement.setInt(2, gameID);
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException ex) {
-            throw new DataAccessException("Error: bad request");
+            throw new ServerConnectionInterruptException("Error: connection interrupted");
+
         }
     }
-
-//    private String getUsername(String authToken) throws DataAccessException{
-//        try (var conn = DatabaseManager.getConnection()) {
-//            try (var preparedStatement = conn.prepareStatement("SELECT username FROM validAuthTokens WHERE authToken = ?")){
-//                preparedStatement.setString(1, authToken);
-//                var response = preparedStatement.executeQuery();
-//                if (response.next()){
-//                    return response.getString(1);
-//                }
-//            }
-//        } catch (SQLException ex) {
-//            throw new DataAccessException("Error: bad request");
-//        }
-//    }
 
     String[] tables = {
             """
@@ -210,13 +251,33 @@ public class MySQLDataAccess implements DataAccess {
         return serializer.fromJson(chessGameAsJson, ChessGame.class);
     }
 
+    private String obfuscatePassword(String password){
+        return BCrypt.hashpw(password, BCrypt.gensalt());
+    }
+
+    private GameData buildGameFromResultSet(ResultSet resultSet) throws DataAccessException {
+        try {
+            int gameID = resultSet.getInt(1);
+            String whiteUsername = resultSet.getString(2);
+            String blackUsername = resultSet.getString(3);
+            String gameName = resultSet.getString(4);
+            String chessGameAsJson = resultSet.getString(5);
+            ChessGame chessGame = deserializeChessGame(chessGameAsJson);
+            return new GameData(gameID, whiteUsername, blackUsername, gameName, chessGame);
+        } catch (SQLException ex){
+            throw new ServerConnectionInterruptException("Error: connection interrupted");
+
+        }
+    }
+
     private AuthData addAuthDataToDatabase(Connection conn, String authToken, String username) throws DataAccessException {
         try (var preparedStatement = conn.prepareStatement("INSERT INTO validauthtokens (authToken, username) VALUES(?, ?)")){
             preparedStatement.setString(1, authToken);
             preparedStatement.setString(2, username);
             preparedStatement.executeUpdate();
         } catch (SQLException ex) {
-            throw new DataAccessException("Error: ");
+            throw new ServerConnectionInterruptException("Error: connection interrupted");
+
         }
 
         return new AuthData(username, authToken);

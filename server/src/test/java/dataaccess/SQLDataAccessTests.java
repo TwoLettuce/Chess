@@ -87,7 +87,7 @@ public class SQLDataAccessTests {
     public void createOneGameThenList() throws Exception{
         auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
         Assertions.assertDoesNotThrow(() -> gameService.createGame(auth, "Game1"));
-        ArrayList<GameData> correctGameList = new ArrayList<>(List.of(new GameData(1000, null, null, "Game1", new ChessGame())));
+        ArrayList<GameData> correctGameList = new ArrayList<>(List.of(new GameData(1, null, null, "Game1", new ChessGame())));
         Assertions.assertEquals(correctGameList, gameService.listGames(auth));
     }
 
@@ -98,11 +98,11 @@ public class SQLDataAccessTests {
             gameService.createGame(auth, "Game" + i);
         }
         ArrayList<GameData> correctGameList = new ArrayList<>(List.of(
-                new GameData(1000, null, null, "Game0", new ChessGame()),
-                new GameData(1001, null, null, "Game1", new ChessGame()),
-                new GameData(1002, null, null, "Game2", new ChessGame()),
-                new GameData(1003, null, null, "Game3", new ChessGame()),
-                new GameData(1004, null, null, "Game4", new ChessGame())
+                new GameData(1, null, null, "Game0", new ChessGame()),
+                new GameData(2, null, null, "Game1", new ChessGame()),
+                new GameData(3, null, null, "Game2", new ChessGame()),
+                new GameData(4, null, null, "Game3", new ChessGame()),
+                new GameData(5, null, null, "Game4", new ChessGame())
         ));
         Assertions.assertEquals(correctGameList, gameService.listGames(auth));
     }
@@ -135,14 +135,14 @@ public class SQLDataAccessTests {
     public void testJoinGameWhite() throws DataAccessException {
         auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
         gameService.createGame(auth, "Game");
-        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth, new JoinRequest("WHITE", 1000)));
+        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth, new JoinRequest("WHITE", 1)));
     }
 
     @Test
     public void testJoinGameBlack() throws DataAccessException {
         auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
         gameService.createGame(auth, "Game");
-        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth, new JoinRequest("BLACK", 1000)));
+        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth, new JoinRequest("BLACK", 1)));
     }
 
     @Test
@@ -150,8 +150,8 @@ public class SQLDataAccessTests {
         auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
         String auth2 = userService.register(new UserData("username", "pass", "email")).authToken();
         gameService.createGame(auth, "Game");
-        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth, new JoinRequest("BLACK", 1000)));
-        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth2, new JoinRequest("WHITE", 1000)));
+        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth, new JoinRequest("BLACK", 1)));
+        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth2, new JoinRequest("WHITE", 1)));
     }
 
     @Test

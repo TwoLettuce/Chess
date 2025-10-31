@@ -54,8 +54,7 @@ public class MemoryDataAccess implements DataAccess {
         }
     }
 
-    @Override
-    public UserData getUser(String username) {
+    private UserData getUser(String username) {
         return users.get(username);
     }
 

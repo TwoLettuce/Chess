@@ -7,6 +7,8 @@ import datamodel.AuthData;
 import datamodel.LoginData;
 import datamodel.UserData;
 
+import java.util.ArrayList;
+
 public class UserService {
     private DataAccess dataAccess;
     public UserService(DataAccess dataAccess){

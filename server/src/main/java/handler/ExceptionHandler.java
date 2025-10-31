@@ -1,8 +1,11 @@
 package handler;
 
+import dataaccess.DataAccessException;
 import dataaccess.InvalidCredentialsException;
 import datamodel.LoginData;
 import datamodel.UserData;
+
+import java.util.Objects;
 
 public class ExceptionHandler {
     public static void verifyFieldsNotEmpty(UserData userData) throws InvalidCredentialsException {
@@ -19,6 +22,12 @@ public class ExceptionHandler {
         }
     }
 
+    public static void validateColor(String playerColor) throws DataAccessException {
+        if (!(Objects.equals(playerColor, "WHITE") || Objects.equals(playerColor, "BLACK"))){
+            throw new DataAccessException("Error: bad request");
+        }
+    }
+
     public static int getErrorCode(Exception ex) {
         String errorMessage = ex.getMessage();
         switch (errorMessage) {
@@ -28,7 +37,7 @@ public class ExceptionHandler {
             case "Error: unauthorized" -> {
                 return 401;
             }
-            case "Error: already taken" -> {
+            case "Error: already taken", "Error: Forbidden" -> {
                 return 403;
             }
             default -> {
