@@ -27,10 +27,10 @@ public class MySQLDataAccess implements DataAccess {
     }
 
 
-    public UserData getUser(UserData userData) throws DataAccessException {
+    public UserData getUser(String username) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
-            try (var preparedStatement = conn.prepareStatement("SELECT username FROM users WHERE username = ?")) {
-                preparedStatement.setString(1, userData.username());
+            try (var preparedStatement = conn.prepareStatement("SELECT * FROM users WHERE username = ?")) {
+                preparedStatement.setString(1, username);
                 var result = preparedStatement.executeQuery();
                 if (result.next()) {
                     return new UserData(result.getString("username"), result.getString("password"), result.getString("email"));
@@ -42,43 +42,33 @@ public class MySQLDataAccess implements DataAccess {
             throw new ServerConnectionInterruptException("Error: Forbidden");
         }
     }
-    @Override
-    public AuthData registerUser(UserData userData) throws DataAccessException {
-        try (var conn = DatabaseManager.getConnection()){
 
+    @Override
+    public void addUser(UserData userData) throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()){
             try (var preparedStatement = conn.prepareStatement("INSERT INTO users (username, password, email) VALUES(?, ?, ?)")){
                 preparedStatement.setString(1, userData.username());
-                preparedStatement.setString(2, obfuscatePassword(userData.password()));
+                preparedStatement.setString(2, userData.password());
                 preparedStatement.setString(3, userData.email());
                 preparedStatement.executeUpdate();
             }
-            String authToken = DataAccess.generateAuthToken();
-            return addAuthDataToDatabase(conn, authToken, userData.username());
-
         } catch (SQLException ex){
             throw new ServerConnectionInterruptException("Error: connection interrupted");
         }
     }
 
     @Override
-    public AuthData login(LoginData loginData) throws DataAccessException {
-        //INSERT INTO validAuthData VALUES (<authToken>, <username>);
-        try (var conn = DatabaseManager.getConnection()) {
-            try (var verifyLoginDataStatement = conn.prepareStatement("SELECT * FROM users WHERE username = ?")){
-                verifyLoginDataStatement.setString(1, loginData.username());
-                var resultSet = verifyLoginDataStatement.executeQuery();
-                if (resultSet.next()) {
-                    if (BCrypt.checkpw(loginData.password(), resultSet.getString(2))) {
-                        String authToken = DataAccess.generateAuthToken();
-                        return addAuthDataToDatabase(conn, authToken, loginData.username());
-                    }
-                }
-                throw new DataAccessException("Error: unauthorized");
+    public AuthData addAuthData(AuthData authData) throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()){
+            try (var preparedStatement = conn.prepareStatement("INSERT INTO validauthtokens (authToken, username) VALUES(?, ?)")){
+                preparedStatement.setString(1, authData.authToken());
+                preparedStatement.setString(2, authData.username());
+                preparedStatement.executeUpdate();
             }
-        } catch (SQLException ex) {
-            throw new ServerConnectionInterruptException("Error: connection interrupted");
-
+        } catch (SQLException ex){
+            throw new DataAccessException("Error: connection interrupted");
         }
+        return authData;
     }
 
     @Override
@@ -127,7 +117,7 @@ public class MySQLDataAccess implements DataAccess {
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException | DataAccessException ex) {
-            
+
         }
     }
 
@@ -217,6 +207,23 @@ public class MySQLDataAccess implements DataAccess {
                 return result.next();
             }
         } catch (SQLException ex){
+            throw new ServerConnectionInterruptException("Error: couldn't connect");
+        }
+    }
+
+    @Override
+    public GameData getGame(int gameID) throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement("SELECT * FROM games WHERE gameID = ?")) {
+                preparedStatement.setInt(1, gameID);
+                var result = preparedStatement.executeQuery();
+                if (result.next()) {
+                    return new GameData(result.getInt("gameID"), result.getString("whiteUsername"), result.getString("blackUsername"), result.getString("gameName"), deserializeChessGame(result.getString("chessGame")));
+                } else {
+                    return null;
+                }
+            }
+        } catch (SQLException ex) {
             throw new ServerConnectionInterruptException("Error: couldn't connect");
         }
     }

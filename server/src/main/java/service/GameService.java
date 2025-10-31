@@ -42,6 +42,7 @@ public class GameService {
     public void joinGame(String authToken, JoinRequest joinRequest) throws DataAccessException {
         validateAuthToken(authToken);
         ExceptionHandler.validateColor(joinRequest.playerColor());
+        GameData game = dataAccess.getGame(gameID);
         dataAccess.joinGame(authToken, joinRequest.playerColor(), joinRequest.gameID());
     }
 

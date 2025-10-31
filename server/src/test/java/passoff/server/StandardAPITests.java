@@ -62,7 +62,7 @@ public class StandardAPITests {
 
     @Test
     @Order(2)
-    @DisplayName("Normal UserData Login")
+    @DisplayName("Normal User Login")
     public void loginSuccess() {
         TestAuthResult loginResult = serverFacade.login(existingUser);
 
@@ -77,8 +77,8 @@ public class StandardAPITests {
     @DisplayName("Login Bad Request")
     public void loginBadRequest() {
         TestUser[] incompleteLoginRequests = {
-            new TestUser(null, existingUser.getPassword()),
-            new TestUser(existingUser.getUsername(), null),
+                new TestUser(null, existingUser.getPassword()),
+                new TestUser(existingUser.getUsername(), null),
         };
 
         for (TestUser incompleteLoginRequest : incompleteLoginRequests) {
@@ -105,7 +105,7 @@ public class StandardAPITests {
 
     @Test
     @Order(4)
-    @DisplayName("Normal UserData Registration")
+    @DisplayName("Normal User Registration")
     public void registerSuccess() {
         //submit register request
         TestAuthResult registerResult = serverFacade.register(newUser);
@@ -118,7 +118,7 @@ public class StandardAPITests {
 
     @Test
     @Order(5)
-    @DisplayName("Re-Register UserData")
+    @DisplayName("Re-Register User")
     public void registerTwice() {
         //submit register request trying to register existing user
         TestAuthResult registerResult = serverFacade.register(existingUser);
@@ -301,9 +301,9 @@ public class StandardAPITests {
     @DisplayName("List Multiple Games")
     public void listGamesSuccess() {
         //register a few users to create games
-        TestUser userA = new TestUser("a", "A", "a.A");
-        TestUser userB = new TestUser("b", "B", "b.B");
-        TestUser userC = new TestUser("c", "C", "c.C");
+        TestUser userA = new TestUser("a", "A", "a@mail.com");
+        TestUser userB = new TestUser("b", "B", "b@mail.com");
+        TestUser userC = new TestUser("c", "C", "c@mail.com");
 
         TestAuthResult authA = serverFacade.register(userA);
         TestAuthResult authB = serverFacade.register(userB);

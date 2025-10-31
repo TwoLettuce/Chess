@@ -14,8 +14,8 @@ public class MemoryDataAccess implements DataAccess {
     private ArrayList<GameData> games = new ArrayList<>();
 
     @Override
-    public UserData getUser(UserData userData) throws DataAccessException {
-        return users.get(userData.username());
+    public UserData getUser(String username) throws DataAccessException {
+        return users.get(username);
     }
 
     public boolean findUsernameInAuthData(String username){
@@ -23,25 +23,24 @@ public class MemoryDataAccess implements DataAccess {
     }
 
     @Override
-    public AuthData registerUser(UserData userData) throws DataAccessException {
-        if (users.containsKey(userData.username())) {
-            throw new DataAccessException("Error: already taken");
+    public GameData getGame(int gameID) throws DataAccessException {
+        for (GameData game : games){
+            if (game.getGameID() == gameID){
+                return game;
+            }
         }
-        users.put(userData.username(), userData);
-        String authToken = DataAccess.generateAuthToken();
-        validAuthTokens.put(authToken, userData.username());
-        return new AuthData(userData.username(), authToken);
+        return null;
     }
 
-    public AuthData login(LoginData loginData) throws DataAccessException {
-        if (users.containsKey(loginData.username())
-                && getUser(loginData.username()).password().equals(loginData.password())) {
-            String authToken = DataAccess.generateAuthToken();
-            validAuthTokens.put(authToken, loginData.username());
-            return new AuthData(loginData.username(), authToken);
-        } else {
-            throw new DataAccessException("Error: unauthorized");
-        }
+    @Override
+    public void addUser(UserData userData) throws DataAccessException {
+        users.put(userData.username(), userData);
+    }
+
+    @Override
+    public AuthData addAuthData(AuthData authData) throws DataAccessException {
+        validAuthTokens.put(authData.authToken(), authData.username());
+        return authData;
     }
 
     public void logout(String authToken) throws DataAccessException {
@@ -52,10 +51,6 @@ public class MemoryDataAccess implements DataAccess {
         validAuthTokens.clear();
         users.clear();
         games.clear();
-    }
-
-    private UserData getUser(String username) {
-        return users.get(username);
     }
 
     @Override
