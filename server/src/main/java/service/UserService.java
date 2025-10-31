@@ -8,7 +8,6 @@ import datamodel.LoginData;
 import datamodel.UserData;
 import org.mindrot.jbcrypt.BCrypt;
 
-import java.util.ArrayList;
 import java.util.UUID;
 
 public class UserService {
@@ -59,6 +58,6 @@ public class UserService {
 
     public void logout(String authToken) throws DataAccessException{
         validateAuthToken(authToken);
-        dataAccess.logout(authToken);
+        dataAccess.deleteAuthData(authToken);
     }
 }

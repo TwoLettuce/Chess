@@ -43,7 +43,7 @@ public class MemoryDataAccess implements DataAccess {
         return authData;
     }
 
-    public void logout(String authToken) throws DataAccessException {
+    public void deleteAuthData(String authToken) throws DataAccessException {
         validAuthTokens.remove(authToken);
     }
 

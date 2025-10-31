@@ -72,7 +72,7 @@ public class MySQLDataAccess implements DataAccess {
     }
 
     @Override
-    public void logout(String authToken) throws DataAccessException {
+    public void deleteAuthData(String authToken) throws DataAccessException {
         //DELETE FROM validAuthData WHERE authToken = <authToken>
         try (var conn = DatabaseManager.getConnection()){
             try (var preparedStatement = conn.prepareStatement("DELETE FROM validAuthTokens WHERE authToken = ?")){
@@ -106,16 +106,22 @@ public class MySQLDataAccess implements DataAccess {
     @Override
     public void clearDatabase() throws DataAccessException {
         //TRUNCATE TABLE <tableName>;
+
+        //try dropping database then configuring it again?
         try (var conn = DatabaseManager.getConnection()){
-            try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE users")){
+//            try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE users")){
+//                preparedStatement.executeUpdate();
+//            }
+//            try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE validAuthTokens")){
+//                preparedStatement.executeUpdate();
+//            }
+//            try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE games")){
+//                preparedStatement.executeUpdate();
+//            }
+            try (var preparedStatement = conn.prepareStatement("DROP DATABASE chess")){
                 preparedStatement.executeUpdate();
             }
-            try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE validauthtokens")){
-                preparedStatement.executeUpdate();
-            }
-            try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE games")){
-                preparedStatement.executeUpdate();
-            }
+            configureDatabase();
         } catch (SQLException | DataAccessException ex) {
             throw new DataAccessException("Error: connection interrupted");
         }
