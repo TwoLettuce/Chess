@@ -11,7 +11,6 @@ import org.mindrot.jbcrypt.BCrypt;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -78,7 +77,6 @@ public class MySQLDataAccess implements DataAccess {
     @Override
     public void logout(String authToken) throws DataAccessException {
         //DELETE FROM validAuthData WHERE authToken = <authToken>
-        validateAuthToken(authToken);
         try (var conn = DatabaseManager.getConnection()){
             try (var preparedStatement = conn.prepareStatement("DELETE FROM validAuthTokens WHERE authToken = ?")){
                 preparedStatement.setString(1, authToken);
@@ -165,24 +163,20 @@ public class MySQLDataAccess implements DataAccess {
     }
 
     @Override
-    public int createGame(String authToken, String gameName) throws DataAccessException {
+    public int createGame(String authToken, int gameID, String gameName) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             try (var preparedStatement = conn.prepareStatement(
-                    "INSERT INTO games (gameName, chessGame) VALUES(?, ?)", Statement.RETURN_GENERATED_KEYS)){
-                preparedStatement.setString(1, gameName);
+                    "INSERT INTO games (gameID, gameName, chessGame) VALUES(?, ?, ?)")){
+                preparedStatement.setInt(1, gameID);
+                preparedStatement.setString(2, gameName);
                 String chessGameAsJson = serializeChessGame(new ChessGame());
-                preparedStatement.setString(2, chessGameAsJson);
+                preparedStatement.setString(3, chessGameAsJson);
                 preparedStatement.executeUpdate();
-                var result = preparedStatement.getGeneratedKeys();
-                if (result.next()){
-                    return result.getInt(1);
-                }
+                return gameID;
             }
         } catch (SQLException ex) {
             throw new ServerConnectionInterruptException("Error: connection interrupted");
-
         }
-        return 0;
     }
 
     @Override
@@ -245,7 +239,7 @@ public class MySQLDataAccess implements DataAccess {
             """,
             """
             CREATE TABLE IF NOT EXISTS games (
-              gameID int NOT NULL AUTO_INCREMENT,
+              gameID int NOT NULL,
               whiteUsername varchar(256),
               blackUsername varchar(256),
               gameName varchar(256) NOT NULL,

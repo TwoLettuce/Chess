@@ -14,7 +14,7 @@ public interface DataAccess {
     void logout(String authToken) throws DataAccessException;
     void clearDatabase() throws DataAccessException;
     Collection<GameData> listGames(String authToken) throws DataAccessException;
-    int createGame(String authToken, String gameName) throws DataAccessException;
+    int createGame(String authToken, int gameID, String gameName) throws DataAccessException;
     void joinGame(String authToken, String playerColor, int gameID) throws DataAccessException;
     AuthData getAuthData(String authToken) throws DataAccessException;
     static String generateAuthToken(){

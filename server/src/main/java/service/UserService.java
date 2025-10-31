@@ -15,6 +15,12 @@ public class UserService {
         this.dataAccess = dataAccess;
     }
 
+    private void validateAuthToken(String authToken) throws DataAccessException {
+        if (dataAccess.getAuthData(authToken) == null){
+            throw new DataAccessException("Error: unauthorized");
+        }
+    }
+
     public AuthData register(UserData userData) throws DataAccessException {
         ExceptionHandler.verifyFieldsNotEmpty(userData);
         return dataAccess.registerUser(userData);
@@ -27,6 +33,7 @@ public class UserService {
     }
 
     public void logout(String authToken) throws DataAccessException{
+        validateAuthToken(authToken);
         dataAccess.logout(authToken);
     }
 }

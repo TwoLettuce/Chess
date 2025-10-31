@@ -110,9 +110,10 @@ public class Server {
     private void createGame(Context ctx) {
         var serializer = new Gson();
         var authToken = ctx.header("authorization");
-        Object gameName = serializer.fromJson(ctx.body(), Map.class).get("gameName");
+        Object gameNameAsObject = serializer.fromJson(ctx.body(), Map.class).get("gameName");
+
         try {
-            var gameID = gameService.createGame(authToken, gameName);
+            var gameID = gameService.createGame(authToken, gameNameAsObject);
             ctx.json(serializer.toJson(Map.of("gameID", gameID)));
         } catch (DataAccessException e){
             ctx.status(ExceptionHandler.getErrorCode(e)).json(serializer.toJson(Map.of("message", e.getMessage())));

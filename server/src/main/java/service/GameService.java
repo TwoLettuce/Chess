@@ -10,7 +10,7 @@ import java.util.Collection;
 
 public class GameService {
     private final DataAccess dataAccess;
-
+    private int gameID = 1;
     public GameService(DataAccess dataAccess) {
         this.dataAccess = dataAccess;
     }
@@ -26,13 +26,17 @@ public class GameService {
         return dataAccess.listGames(authToken);
     }
 
-    public int createGame(String authToken, Object gameName) throws DataAccessException {
+    public int createGame(String authToken, Object gameNameAsObject) throws DataAccessException {
         validateAuthToken(authToken);
-        if (!(gameName instanceof String)) {
+        String gameName;
+        if (gameNameAsObject != null){
+            gameName = gameNameAsObject.toString();
+        } else {
             throw new DataAccessException("Error: bad request");
         }
-        String gameNameString = gameName.toString();
-        return dataAccess.createGame(authToken, gameNameString);
+        int thisID = gameID;
+        gameID++;
+        return dataAccess.createGame(authToken, thisID, gameName);
     }
 
     public void joinGame(String authToken, JoinRequest joinRequest) throws DataAccessException {
