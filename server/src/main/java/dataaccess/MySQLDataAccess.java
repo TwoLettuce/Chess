@@ -11,10 +11,7 @@ import org.mindrot.jbcrypt.BCrypt;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class MySQLDataAccess implements DataAccess {
 
@@ -60,7 +57,7 @@ public class MySQLDataAccess implements DataAccess {
     @Override
     public AuthData addAuthData(AuthData authData) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()){
-            try (var preparedStatement = conn.prepareStatement("INSERT INTO validauthtokens (authToken, username) VALUES(?, ?)")){
+            try (var preparedStatement = conn.prepareStatement("INSERT INTO validAuthTokens (authToken, username) VALUES(?, ?)")){
                 preparedStatement.setString(1, authData.authToken());
                 preparedStatement.setString(2, authData.username());
                 preparedStatement.executeUpdate();
@@ -106,22 +103,16 @@ public class MySQLDataAccess implements DataAccess {
     @Override
     public void clearDatabase() throws DataAccessException {
         //TRUNCATE TABLE <tableName>;
-
-        //try dropping database then configuring it again?
         try (var conn = DatabaseManager.getConnection()){
-//            try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE users")){
-//                preparedStatement.executeUpdate();
-//            }
-//            try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE validAuthTokens")){
-//                preparedStatement.executeUpdate();
-//            }
-//            try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE games")){
-//                preparedStatement.executeUpdate();
-//            }
-            try (var preparedStatement = conn.prepareStatement("DROP DATABASE chess")){
+            try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE users")){
                 preparedStatement.executeUpdate();
             }
-            configureDatabase();
+            try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE validAuthTokens")){
+                preparedStatement.executeUpdate();
+            }
+            try (var preparedStatement = conn.prepareStatement("TRUNCATE TABLE games")){
+                preparedStatement.executeUpdate();
+            }
         } catch (SQLException | DataAccessException ex) {
             throw new DataAccessException("Error: connection interrupted");
         }
@@ -164,18 +155,15 @@ public class MySQLDataAccess implements DataAccess {
     }
 
     @Override
-    public void joinGame(String authToken, String playerColor, int gameID) throws DataAccessException {
-        var users = getUsersInGame(gameID);
+    public void addUserToGame(String authToken, String playerColor, int gameID) throws DataAccessException {
         var username = getAuthData(authToken).username();
         //UPDATE gameData SET whiteUsername/blackUsername = <username> WHERE gameID = <gameID>;
         try (var conn = DatabaseManager.getConnection()) {
             String userColor;
-            if (playerColor.equals("WHITE") && users.get("whiteUsername") == null) {
+            if (Objects.equals(playerColor, "WHITE")){
                 userColor = "whiteUsername";
-            } else if (playerColor.equals("BLACK") && users.get("blackUsername") == null) {
-                userColor = "blackUsername";
             } else {
-                throw new DataAccessException("Error: already taken");
+                userColor = "blackUsername";
             }
             try (var preparedStatement = conn.prepareStatement("UPDATE games SET " + userColor + " = ? WHERE gameID = ?")){
                 preparedStatement.setString(1, username);
@@ -272,10 +260,6 @@ public class MySQLDataAccess implements DataAccess {
         return serializer.fromJson(chessGameAsJson, ChessGame.class);
     }
 
-    private String obfuscatePassword(String password){
-        return BCrypt.hashpw(password, BCrypt.gensalt());
-    }
-
     private GameData buildGameFromResultSet(ResultSet resultSet) throws DataAccessException {
         try {
             int gameID = resultSet.getInt(1);
@@ -292,7 +276,7 @@ public class MySQLDataAccess implements DataAccess {
     }
 
     private AuthData addAuthDataToDatabase(Connection conn, String authToken, String username) throws DataAccessException {
-        try (var preparedStatement = conn.prepareStatement("INSERT INTO validauthtokens (authToken, username) VALUES(?, ?)")){
+        try (var preparedStatement = conn.prepareStatement("INSERT INTO validAuthTokens (authToken, username) VALUES(?, ?)")){
             preparedStatement.setString(1, authToken);
             preparedStatement.setString(2, username);
             preparedStatement.executeUpdate();

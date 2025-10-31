@@ -66,7 +66,7 @@ public class MemoryDataAccess implements DataAccess {
     }
 
     @Override
-    public void joinGame(String authToken, String playerColor, int gameID) throws DataAccessException {
+    public void addUserToGame(String authToken, String playerColor, int gameID) throws DataAccessException {
         validateFields(authToken, playerColor, gameID);
         int gameIndex = findGameIndex(gameID);
         String playerUsername = validAuthTokens.get(authToken);
