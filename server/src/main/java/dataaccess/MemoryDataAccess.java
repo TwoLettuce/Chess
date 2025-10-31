@@ -87,6 +87,15 @@ public class MemoryDataAccess implements DataAccess {
         }
     }
 
+    @Override
+    public AuthData getAuthData(String authToken) throws DataAccessException {
+        if (validAuthTokens.containsKey(authToken)) {
+            return new AuthData(validAuthTokens.get(authToken), authToken);
+        } else {
+            return null;
+        }
+    }
+
     private void validateFields(String authToken, String playerColor, int gameID) throws DataAccessException{
         int gameIndex = findGameIndex(gameID);
         validatePlayerColor(games.get(gameIndex), playerColor, validAuthTokens.get(authToken));

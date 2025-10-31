@@ -56,7 +56,6 @@ public class MySQLDataAccess implements DataAccess {
     @Override
     public AuthData login(LoginData loginData) throws DataAccessException {
         //INSERT INTO validAuthData VALUES (<authToken>, <username>);
-        AuthData authData;
         try (var conn = DatabaseManager.getConnection()) {
             try (var verifyLoginDataStatement = conn.prepareStatement("SELECT * FROM users WHERE username = ?")){
                 verifyLoginDataStatement.setString(1, loginData.username());
@@ -148,7 +147,6 @@ public class MySQLDataAccess implements DataAccess {
 
     @Override
     public Collection<GameData> listGames(String authToken) throws DataAccessException {
-        validateAuthToken(authToken);
         GameData thisGameData;
         ArrayList<GameData> listOfGames = new ArrayList<>();
         try (var conn = DatabaseManager.getConnection()){
@@ -168,9 +166,9 @@ public class MySQLDataAccess implements DataAccess {
 
     @Override
     public int createGame(String authToken, String gameName) throws DataAccessException {
-        validateAuthToken(authToken);
         try (var conn = DatabaseManager.getConnection()) {
-            try (var preparedStatement = conn.prepareStatement("INSERT INTO games (gameName, chessGame) VALUES(?, ?)", Statement.RETURN_GENERATED_KEYS)){
+            try (var preparedStatement = conn.prepareStatement(
+                    "INSERT INTO games (gameName, chessGame) VALUES(?, ?)", Statement.RETURN_GENERATED_KEYS)){
                 preparedStatement.setString(1, gameName);
                 String chessGameAsJson = serializeChessGame(new ChessGame());
                 preparedStatement.setString(2, chessGameAsJson);
@@ -209,6 +207,23 @@ public class MySQLDataAccess implements DataAccess {
         } catch (SQLException ex) {
             throw new ServerConnectionInterruptException("Error: connection interrupted");
 
+        }
+    }
+
+    @Override
+    public AuthData getAuthData(String authToken) throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()){
+            try (var preparedStatement = conn.prepareStatement("SELECT * FROM validAuthTokens WHERE authToken = ?")){
+                preparedStatement.setString(1, authToken);
+                var result = preparedStatement.executeQuery();
+                if (result.next()){
+                    return new AuthData(result.getString("username"), result.getString("authToken"));
+                } else {
+                    return null;
+                }
+            }
+        } catch (SQLException ex){
+            throw new ServerConnectionInterruptException("Error: couldn't connect");
         }
     }
 

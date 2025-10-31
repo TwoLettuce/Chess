@@ -16,6 +16,7 @@ public interface DataAccess {
     Collection<GameData> listGames(String authToken) throws DataAccessException;
     int createGame(String authToken, String gameName) throws DataAccessException;
     void joinGame(String authToken, String playerColor, int gameID) throws DataAccessException;
+    AuthData getAuthData(String authToken) throws DataAccessException;
     static String generateAuthToken(){
         return UUID.randomUUID().toString();
     }
