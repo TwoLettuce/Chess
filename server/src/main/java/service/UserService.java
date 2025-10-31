@@ -26,7 +26,7 @@ public class UserService {
         if (dataAccess.getUser(userData) == null){
             return dataAccess.registerUser(userData);
         } else {
-            throw new DataAccessException("Error: Forbidden");
+            throw new DataAccessException("Error: already taken");
         }
     }
 

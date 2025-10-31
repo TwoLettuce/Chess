@@ -18,6 +18,10 @@ public class MemoryDataAccess implements DataAccess {
         return users.get(userData.username());
     }
 
+    public boolean findUsernameInAuthData(String username){
+        return validAuthTokens.containsValue(username);
+    }
+
     @Override
     public AuthData registerUser(UserData userData) throws DataAccessException {
         if (users.containsKey(userData.username())) {
