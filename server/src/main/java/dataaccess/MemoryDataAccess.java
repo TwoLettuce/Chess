@@ -14,6 +14,11 @@ public class MemoryDataAccess implements DataAccess {
     private ArrayList<GameData> games = new ArrayList<>();
 
     @Override
+    public UserData getUser(UserData userData) throws DataAccessException {
+        return users.get(userData.username());
+    }
+
+    @Override
     public AuthData registerUser(UserData userData) throws DataAccessException {
         if (users.containsKey(userData.username())) {
             throw new DataAccessException("Error: already taken");

@@ -23,20 +23,29 @@ public class MySQLDataAccess implements DataAccess {
             configureDatabase();
         } catch (DataAccessException ex) {
             System.out.println("Something's wrong");
-            //throw new DataAccessException("");
         }
     }
 
+
+    public UserData getUser(UserData userData) throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement("SELECT username FROM users WHERE username = ?")) {
+                preparedStatement.setString(1, userData.username());
+                var result = preparedStatement.executeQuery();
+                if (result.next()) {
+                    return new UserData(result.getString("username"), result.getString("password"), result.getString("email"));
+                } else {
+                    return null;
+                }
+            }
+        } catch (SQLException ex) {
+            throw new ServerConnectionInterruptException("Error: Forbidden");
+        }
+    }
     @Override
     public AuthData registerUser(UserData userData) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()){
-            try (var preparedStatement = conn.prepareStatement("SELECT username FROM users WHERE username = ?")){
-                preparedStatement.setString(1, userData.username());
-                var result = preparedStatement.executeQuery();
-                if (result.next()){
-                    throw new DataAccessException("Error: Forbidden");
-                }
-            }
+
             try (var preparedStatement = conn.prepareStatement("INSERT INTO users (username, password, email) VALUES(?, ?, ?)")){
                 preparedStatement.setString(1, userData.username());
                 preparedStatement.setString(2, obfuscatePassword(userData.password()));

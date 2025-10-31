@@ -23,7 +23,11 @@ public class UserService {
 
     public AuthData register(UserData userData) throws DataAccessException {
         ExceptionHandler.verifyFieldsNotEmpty(userData);
-        return dataAccess.registerUser(userData);
+        if (dataAccess.getUser(userData) == null){
+            return dataAccess.registerUser(userData);
+        } else {
+            throw new DataAccessException("Error: Forbidden");
+        }
     }
 
 

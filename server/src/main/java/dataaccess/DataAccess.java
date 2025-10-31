@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.UUID;
 
 public interface DataAccess {
+    UserData getUser(UserData userData) throws DataAccessException;
     AuthData registerUser(UserData userData) throws DataAccessException;
     AuthData login(LoginData loginData) throws DataAccessException;
     void logout(String authToken) throws DataAccessException;
