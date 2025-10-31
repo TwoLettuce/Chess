@@ -117,7 +117,7 @@ public class MySQLDataAccess implements DataAccess {
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException | DataAccessException ex) {
-
+            throw new DataAccessException("Error: connection interrupted");
         }
     }
 
