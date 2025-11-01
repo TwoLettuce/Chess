@@ -14,6 +14,7 @@ import service.UserService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class SQLDataAccessTests {
     MySQLDataAccess mySQLDataAccess = new MySQLDataAccess();
@@ -160,6 +161,25 @@ public class SQLDataAccessTests {
         int gameID = sqlGameService.createGame(authSQL, "Game");
         sqlGameService.joinGame(authSQL, new JoinRequest("WHITE", gameID));
         Assertions.assertDoesNotThrow(() -> sqlGameService.joinGame(authSQL, new JoinRequest("BLACK", gameID)));
+    }
+
+    @Test
+    public void testGetUser() throws DataAccessException{
+        UserData res = mySQLDataAccess.getUser(existingSQLUser.username());
+        Assertions.assertTrue(Objects.equals(existingSQLUser.username(), res.username()) && Objects.equals(existingSQLUser.email(), res.email()));
+    }
+
+    @Test
+    public void assertHashedPasswordStoredInUserData() throws DataAccessException{
+        UserData result = mySQLDataAccess.getUser(existingSQLUser.username());
+        Assertions.assertNotSame(existingSQLUser.password(), result.password());
+    }
+
+    @Test
+    public void testDeleteAuthData() throws DataAccessException {
+        authSQL = sqlUserService.login(new LoginData(existingSQLUser.username(), existingSQLUser.password())).authToken();
+        mySQLDataAccess.deleteAuthData(authSQL);
+        Assertions.assertNull(mySQLDataAccess.getAuthData(authSQL));
     }
 
     @Test

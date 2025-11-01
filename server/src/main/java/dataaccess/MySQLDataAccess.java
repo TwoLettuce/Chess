@@ -4,11 +4,7 @@ import chess.ChessGame;
 import com.google.gson.Gson;
 import datamodel.AuthData;
 import datamodel.GameData;
-import datamodel.LoginData;
 import datamodel.UserData;
-import org.mindrot.jbcrypt.BCrypt;
-
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
