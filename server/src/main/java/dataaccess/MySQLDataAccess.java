@@ -81,25 +81,6 @@ public class MySQLDataAccess implements DataAccess {
         }
     }
 
-    private Map<String, String> getUsersInGame(int gameID) throws DataAccessException {
-        HashMap<String, String> users = new HashMap<>();
-        try (var conn = DatabaseManager.getConnection()){
-            try (var preparedStatement = conn.prepareStatement("SELECT * FROM games WHERE gameID = ?")){
-                preparedStatement.setInt(1, gameID);
-                var response = preparedStatement.executeQuery();
-                if (response.next()){
-                    users.put("whiteUsername", response.getString(2));
-                    users.put("blackUsername", response.getString(3));
-                } else {
-                    throw new DataAccessException("Error: bad request");
-                }
-            }
-        } catch (SQLException ex) {
-            throw new ServerConnectionInterruptException("Error: connection interrupted");
-        }
-        return users;
-    }
-
     @Override
     public void clearDatabase() throws DataAccessException {
         //TRUNCATE TABLE <tableName>;
@@ -193,18 +174,6 @@ public class MySQLDataAccess implements DataAccess {
         }
     }
 
-    public boolean findUsernameInAuthData(String username) throws DataAccessException {
-        try (var conn = DatabaseManager.getConnection()){
-            try (var preparedStatement = conn.prepareStatement("SELECT * FROM validAuthTokens WHERE username = ?")){
-                preparedStatement.setString(1, username);
-                var result = preparedStatement.executeQuery();
-                return result.next();
-            }
-        } catch (SQLException ex){
-            throw new ServerConnectionInterruptException("Error: couldn't connect");
-        }
-    }
-
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
@@ -212,7 +181,12 @@ public class MySQLDataAccess implements DataAccess {
                 preparedStatement.setInt(1, gameID);
                 var result = preparedStatement.executeQuery();
                 if (result.next()) {
-                    return new GameData(result.getInt("gameID"), result.getString("whiteUsername"), result.getString("blackUsername"), result.getString("gameName"), deserializeChessGame(result.getString("chessGame")));
+                    int thisGameID = result.getInt("gameID");
+                    String whiteUsername = result.getString("whiteUsername");
+                    String blackUsername = result.getString("blackUsername");
+                    String gameName = result.getString("gameName");
+                    ChessGame chessGame = deserializeChessGame(result.getString("chessGame"));
+                    return new GameData(thisGameID, whiteUsername, blackUsername, gameName, chessGame);
                 } else {
                     return null;
                 }
@@ -274,20 +248,6 @@ public class MySQLDataAccess implements DataAccess {
 
         }
     }
-
-    private AuthData addAuthDataToDatabase(Connection conn, String authToken, String username) throws DataAccessException {
-        try (var preparedStatement = conn.prepareStatement("INSERT INTO validAuthTokens (authToken, username) VALUES(?, ?)")){
-            preparedStatement.setString(1, authToken);
-            preparedStatement.setString(2, username);
-            preparedStatement.executeUpdate();
-        } catch (SQLException ex) {
-            throw new ServerConnectionInterruptException("Error: connection interrupted");
-
-        }
-
-        return new AuthData(username, authToken);
-    }
-
 
     private void configureDatabase() throws DataAccessException {
         DatabaseManager.createDatabase();

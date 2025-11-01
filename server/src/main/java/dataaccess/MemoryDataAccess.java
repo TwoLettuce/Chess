@@ -18,10 +18,6 @@ public class MemoryDataAccess implements DataAccess {
         return users.get(username);
     }
 
-    public boolean findUsernameInAuthData(String username){
-        return validAuthTokens.containsValue(username);
-    }
-
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
         for (GameData game : games){

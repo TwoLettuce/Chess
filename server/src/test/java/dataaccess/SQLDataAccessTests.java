@@ -16,45 +16,45 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SQLDataAccessTests {
-    MySQLDataAccess dataAccess = new MySQLDataAccess();
-    UserService userService = new UserService(dataAccess);
-    DataService dataService = new DataService(dataAccess);
-    GameService gameService = new GameService(dataAccess);
-    UserData sampleUserData = new UserData("myUsername", "myPassword", "myEmail@cs240.gov");
-    UserData existingUser = new UserData("I-exist!", "pa$$w0rd!", "iamironman@cia.gov");
-    String auth;
+    MySQLDataAccess mySQLDataAccess = new MySQLDataAccess();
+    UserService SQLUserService = new UserService(mySQLDataAccess);
+    DataService SQLDataService = new DataService(mySQLDataAccess);
+    GameService SQLGameService = new GameService(mySQLDataAccess);
+    UserData sampleSQLUserData = new UserData("myUsername", "myPassword", "myEmail@cs240.gov");
+    UserData existingSQLUser = new UserData("I-exist!", "pa$$w0rd!", "iamironman@cia.gov");
+    String SQLAuth;
 
     @BeforeEach
     void reset() throws DataAccessException {
-        dataService.clear();
-        auth = userService.register(existingUser).authToken();
-        userService.logout(auth);
+        SQLDataService.clear();
+        SQLAuth = SQLUserService.register(existingSQLUser).authToken();
+        SQLUserService.logout(SQLAuth);
     }
 
     @Test
     public void registerNormalUser() throws DataAccessException {
-        var response = userService.register(sampleUserData);
+        var response = SQLUserService.register(sampleSQLUserData);
         Assertions.assertNotNull(response);
         Assertions.assertEquals("myUsername", response.username());
     }
 
     @Test
     public void registerInvalidUser() {
-        Assertions.assertThrows(DataAccessException.class, () -> userService.register(new UserData("", " ", ",. . 09")));
+        Assertions.assertThrows(DataAccessException.class, () -> SQLUserService.register(new UserData("", " ", ",. . 09")));
     }
 
     @Test
     public void loginNormalUser() throws DataAccessException {
-        var sampleLoginData  = new LoginData(existingUser.username(), existingUser.password());
-        var authData = userService.login(sampleLoginData);
+        var sampleLoginData  = new LoginData(existingSQLUser.username(), existingSQLUser.password());
+        var authData = SQLUserService.login(sampleLoginData);
         Assertions.assertNotNull(authData);
-        Assertions.assertEquals(existingUser.username(), authData.username());
+        Assertions.assertEquals(existingSQLUser.username(), authData.username());
     }
 
     @Test
     public void loginUserNotRegistered() throws DataAccessException{
-        userService.login(new LoginData(existingUser.username(), existingUser.password()));
-        Assertions.assertThrows(DataAccessException.class, () -> userService.login((new LoginData("non existent", "non existent"))));
+        SQLUserService.login(new LoginData(existingSQLUser.username(), existingSQLUser.password()));
+        Assertions.assertThrows(DataAccessException.class, () -> SQLUserService.login((new LoginData("non existent", "non existent"))));
     }
 
 
@@ -66,36 +66,36 @@ public class SQLDataAccessTests {
                 new UserData("user3", "pass3", "email3@me.com")};
         ArrayList<String> authTokens = new ArrayList<>();
         for (var user : users) {
-            var authData = userService.register(user);
+            var authData = SQLUserService.register(user);
             authTokens.add(authData.authToken());
         }
         for (var authToken : authTokens) {
-            userService.logout(authToken);
+            SQLUserService.logout(authToken);
         }
         for (var authToken : authTokens) {
-            Assertions.assertThrows(DataAccessException.class, () -> userService.logout(authToken));
+            Assertions.assertThrows(DataAccessException.class, () -> SQLUserService.logout(authToken));
         }
     }
 
     @Test
     public void logoutUserNotLoggedIn() {
-        Assertions.assertThrows(DataAccessException.class, () -> userService.logout(auth));
+        Assertions.assertThrows(DataAccessException.class, () -> SQLUserService.logout(SQLAuth));
     }
 
 
     @Test
     public void createOneGameThenList() throws Exception{
-        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
-        Assertions.assertDoesNotThrow(() -> gameService.createGame(auth, "Game1"));
+        SQLAuth = SQLUserService.login(new LoginData(existingSQLUser.username(), existingSQLUser.password())).authToken();
+        Assertions.assertDoesNotThrow(() -> SQLGameService.createGame(SQLAuth, "Game1"));
         ArrayList<GameData> correctGameList = new ArrayList<>(List.of(new GameData(1, null, null, "Game1", new ChessGame())));
-        Assertions.assertEquals(correctGameList, gameService.listGames(auth));
+        Assertions.assertEquals(correctGameList, SQLGameService.listGames(SQLAuth));
     }
 
     @Test
     public void createManyGamesThenList () throws Exception {
-        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
+        SQLAuth = SQLUserService.login(new LoginData(existingSQLUser.username(), existingSQLUser.password())).authToken();
         for (int i = 0; i < 5; i++){
-            gameService.createGame(auth, "Game" + i);
+            SQLGameService.createGame(SQLAuth, "Game" + i);
         }
         ArrayList<GameData> correctGameList = new ArrayList<>(List.of(
                 new GameData(1, null, null, "Game0", new ChessGame()),
@@ -104,70 +104,70 @@ public class SQLDataAccessTests {
                 new GameData(4, null, null, "Game3", new ChessGame()),
                 new GameData(5, null, null, "Game4", new ChessGame())
         ));
-        Assertions.assertEquals(correctGameList, gameService.listGames(auth));
+        Assertions.assertEquals(correctGameList, SQLGameService.listGames(SQLAuth));
     }
 
     @Test
     public void testCreateGame() throws DataAccessException {
-        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
-        Assertions.assertDoesNotThrow(()-> gameService.createGame(auth, "Game1"));
+        SQLAuth = SQLUserService.login(new LoginData(existingSQLUser.username(), existingSQLUser.password())).authToken();
+        Assertions.assertDoesNotThrow(()-> SQLGameService.createGame(SQLAuth, "Game1"));
     }
 
     @Test
     public void testClear() throws DataAccessException {
         MemoryDataAccess emptyData = new MemoryDataAccess();
         DataService dataServiceForEmptyData = new DataService(emptyData);
-        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
+        SQLAuth = SQLUserService.login(new LoginData(existingSQLUser.username(), existingSQLUser.password())).authToken();
 
-        gameService.createGame(auth, "game1");
-        gameService.createGame(auth, "game2");
-        Assertions.assertDoesNotThrow(dataService::clear);
+        SQLGameService.createGame(SQLAuth, "game1");
+        SQLGameService.createGame(SQLAuth, "game2");
+        Assertions.assertDoesNotThrow(SQLDataService::clear);
         Assertions.assertDoesNotThrow(dataServiceForEmptyData::clear);
     }
 
     @Test
     public void listOfZeroGames() throws DataAccessException {
-        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
-        Assertions.assertEquals(new ArrayList<GameData>(), gameService.listGames(auth));
+        SQLAuth = SQLUserService.login(new LoginData(existingSQLUser.username(), existingSQLUser.password())).authToken();
+        Assertions.assertEquals(new ArrayList<GameData>(), SQLGameService.listGames(SQLAuth));
     }
 
     @Test
     public void testJoinGameWhite() throws DataAccessException {
-        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
-        gameService.createGame(auth, "Game");
-        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth, new JoinRequest("WHITE", 1)));
+        SQLAuth = SQLUserService.login(new LoginData(existingSQLUser.username(), existingSQLUser.password())).authToken();
+        SQLGameService.createGame(SQLAuth, "Game");
+        Assertions.assertDoesNotThrow(() -> SQLGameService.joinGame(SQLAuth, new JoinRequest("WHITE", 1)));
     }
 
     @Test
     public void testJoinGameBlack() throws DataAccessException {
-        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
-        gameService.createGame(auth, "Game");
-        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth, new JoinRequest("BLACK", 1)));
+        SQLAuth = SQLUserService.login(new LoginData(existingSQLUser.username(), existingSQLUser.password())).authToken();
+        SQLGameService.createGame(SQLAuth, "Game");
+        Assertions.assertDoesNotThrow(() -> SQLGameService.joinGame(SQLAuth, new JoinRequest("BLACK", 1)));
     }
 
     @Test
     public void testJoinGameBothPlayers() throws DataAccessException {
-        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
-        String auth2 = userService.register(new UserData("username", "pass", "email")).authToken();
-        gameService.createGame(auth, "Game");
-        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth, new JoinRequest("BLACK", 1)));
-        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth2, new JoinRequest("WHITE", 1)));
+        SQLAuth = SQLUserService.login(new LoginData(existingSQLUser.username(), existingSQLUser.password())).authToken();
+        String auth2 = SQLUserService.register(new UserData("username", "pass", "email")).authToken();
+        SQLGameService.createGame(SQLAuth, "Game");
+        Assertions.assertDoesNotThrow(() -> SQLGameService.joinGame(SQLAuth, new JoinRequest("BLACK", 1)));
+        Assertions.assertDoesNotThrow(() -> SQLGameService.joinGame(auth2, new JoinRequest("WHITE", 1)));
     }
 
     @Test
     public void testJoinGameBothPlayersAreSamePlayer() throws DataAccessException {
-        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
-        int gameID = gameService.createGame(auth, "Game");
-        gameService.joinGame(auth, new JoinRequest("WHITE", gameID));
-        Assertions.assertDoesNotThrow(() -> gameService.joinGame(auth, new JoinRequest("BLACK", gameID)));
+        SQLAuth = SQLUserService.login(new LoginData(existingSQLUser.username(), existingSQLUser.password())).authToken();
+        int gameID = SQLGameService.createGame(SQLAuth, "Game");
+        SQLGameService.joinGame(SQLAuth, new JoinRequest("WHITE", gameID));
+        Assertions.assertDoesNotThrow(() -> SQLGameService.joinGame(SQLAuth, new JoinRequest("BLACK", gameID)));
     }
 
     @Test
     public void testJoinGameColorTaken() throws DataAccessException {
-        auth = userService.login(new LoginData(existingUser.username(), existingUser.password())).authToken();
-        String auth2 = userService.register(new UserData("IAmYourFather", "NOOOOO!", "star.wars@george.lucas")).authToken();
-        int gameID = gameService.createGame(auth, "Game");
-        gameService.joinGame(auth, new JoinRequest("WHITE", gameID));
-        Assertions.assertThrows(DataAccessException.class, () -> gameService.joinGame(auth2, new JoinRequest("WHITE", gameID)));
+        SQLAuth = SQLUserService.login(new LoginData(existingSQLUser.username(), existingSQLUser.password())).authToken();
+        String auth2 = SQLUserService.register(new UserData("IAmYourFather", "NOOOOO!", "star.wars@george.lucas")).authToken();
+        int gameID = SQLGameService.createGame(SQLAuth, "Game");
+        SQLGameService.joinGame(SQLAuth, new JoinRequest("WHITE", gameID));
+        Assertions.assertThrows(DataAccessException.class, () -> SQLGameService.joinGame(auth2, new JoinRequest("WHITE", gameID)));
     }
 }
