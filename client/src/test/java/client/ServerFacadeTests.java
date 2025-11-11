@@ -2,6 +2,7 @@ package client;
 
 import org.junit.jupiter.api.*;
 import server.Server;
+import serverfacade.ServerFacade;
 
 
 public class ServerFacadeTests {
@@ -20,6 +21,14 @@ public class ServerFacadeTests {
         server.stop();
     }
 
+
+
+    @Test
+    public void printNormalGame(){
+        ServerFacade facade = new ServerFacade();
+        Assertions.assertDoesNotThrow(facade::listGames);
+
+    }
 
     @Test
     public void sampleTest() {
