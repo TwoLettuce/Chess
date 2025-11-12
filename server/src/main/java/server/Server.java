@@ -61,7 +61,7 @@ public class Server {
         }
     }
 
-    private void register(Context ctx) throws DataAccessException{
+    private void register(Context ctx) {
         var serializer = new Gson();
         var request = serializer.fromJson(ctx.body(), UserData.class);
         AuthData response;
@@ -73,7 +73,7 @@ public class Server {
         }
     }
 
-    private void login(Context ctx) throws DataAccessException {
+    private void login(Context ctx) {
         var serializer = new Gson();
         var request = serializer.fromJson(ctx.body(), LoginData.class);
         AuthData response;

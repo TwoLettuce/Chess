@@ -4,6 +4,8 @@ import chess.ChessGame;
 import chess.ChessPiece;
 import chess.ChessPosition;
 
+import java.util.Objects;
+
 /**
  * this class has a draw(ChessBoard board, boolean) method that will draw the given chess board.
  */
@@ -32,7 +34,7 @@ public class ChessBoardUI {
 
     private void printHeader(boolean isBlack){
         StringBuilder header = new StringBuilder();
-        header.append(EscapeSequences.SET_BG_COLOR_RED + EscapeSequences.EMPTY);
+        header.append(EscapeSequences.SET_BG_COLOR_RED + EscapeSequences.SET_TEXT_COLOR_RED + EscapeSequences.WHITE_PAWN);
         header.append(EscapeSequences.SET_TEXT_BOLD + EscapeSequences.SET_TEXT_COLOR_DARK_GREY);
         char[] headerArray;
         if (isBlack) {
@@ -41,10 +43,11 @@ public class ChessBoardUI {
             headerArray = COL_HEADER;
         }
         for (char head : headerArray){
-            header.append("\u2003").append(head).append(" ");
+            header.append(EscapeSequences.SET_TEXT_COLOR_RED).append(EscapeSequences.WHITE_PAWN.trim());
+            header.append(EscapeSequences.SET_TEXT_COLOR_DARK_GREY).append(head).append(" ");
         }
-        header.append(EscapeSequences.EMPTY);
-        header.append(EscapeSequences.RESET_BG_COLOR);
+        header.append(EscapeSequences.SET_TEXT_COLOR_RED + EscapeSequences.WHITE_PAWN);
+        header.append(EscapeSequences.RESET_BG_COLOR + EscapeSequences.SET_TEXT_COLOR_BLACK);
         System.out.println(header);
     }
 
@@ -62,14 +65,21 @@ public class ChessBoardUI {
             StringBuilder thisRow = new StringBuilder();
             thisRow.append(EscapeSequences.SET_BG_COLOR_RED);
             thisRow.append("\u2003").append(row).append(" ");
-            for (int col = 1; col <= NUM_COLS; col++) {
+            int[] cols;
+            if (isBlack){
+                cols = ROW_HEADER;
+            } else {
+                cols = REVERSE_ROW_HEADER;
+            }
+            for (int col : cols) {
                 if (whiteSquare){
                     thisRow.append(EscapeSequences.SET_BG_COLOR_WHITE);
                 } else {
                     thisRow.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
                 }
-                String piece = translateToANSI(board.getPiece(new ChessPosition(row, col)));
+                String piece = translateToANSI(board.getPiece(new ChessPosition(row, col)), whiteSquare);
                 thisRow.append(piece);
+                thisRow.append(EscapeSequences.SET_TEXT_COLOR_BLACK);
                 whiteSquare = !whiteSquare;
             }
             whiteSquare = !whiteSquare;
@@ -80,9 +90,9 @@ public class ChessBoardUI {
         }
     }
 
-    private String translateToANSI(ChessPiece piece) {
+    private String translateToANSI(ChessPiece piece, boolean whiteSquare) {
         if (piece == null) {
-            return EscapeSequences.EMPTY;
+            return makeEmpty(whiteSquare);
         }
         if (piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
             return switch (piece.getPieceType()) {
@@ -103,5 +113,12 @@ public class ChessBoardUI {
                 case KING -> EscapeSequences.BLACK_KING;
             };
         }
+    }
+
+    private String makeEmpty(boolean whiteSquare) {
+        if (whiteSquare){
+            return EscapeSequences.SET_TEXT_COLOR_WHITE + EscapeSequences.WHITE_PAWN;
+        }
+        return EscapeSequences.SET_TEXT_COLOR_LIGHT_GREY + EscapeSequences.WHITE_PAWN;
     }
 }
