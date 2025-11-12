@@ -26,7 +26,7 @@ public class ServerFacadeTests {
     @Test
     public void printNormalGame(){
         ServerFacade facade = new ServerFacade("http://localhost:8080");
-        Assertions.assertDoesNotThrow(() -> facade.listGames(new String[]{"listgames", "urmom"}));
+        Assertions.assertDoesNotThrow(() -> facade.listGames(new String[]{"listgames", "urmom"}, null));
     }
 
     @Test

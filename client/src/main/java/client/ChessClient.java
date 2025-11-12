@@ -1,6 +1,5 @@
 package client;
 
-import dataaccess.DataAccessException;
 import serverfacade.ServerFacade;
 
 import java.util.Objects;
@@ -13,7 +12,9 @@ public class ChessClient {
     String preloginStatus = EscapeSequences.RESET_BG_COLOR + EscapeSequences.SET_TEXT_COLOR_MAGENTA + "[Not logged in]";
     String postloginStatus;
     String username;
+    String authToken;
     boolean loggedIn = false;
+
 
     public ChessClient(String serverURL){
         server = new ServerFacade(serverURL);
@@ -32,8 +33,6 @@ public class ChessClient {
             result = parseInput(input);
         }
 
-        System.out.println("Thanks for playing!");
-
     }
 
     private String parseInput(String input) {
@@ -45,47 +44,31 @@ public class ChessClient {
                 help();
                 break;
             case "register":
-                if (!checkArgs(args, "register", 3)){
-                    break;
-                }
-                try {
-                    server.register(args);
-                } catch (DataAccessException ex){
-                    System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
-                }
-                loggedIn = true;
-                username = args[1];
-                postloginStatus = EscapeSequences.SET_TEXT_COLOR_MAGENTA + "[Logged in as " + username + "]";
+                register(args);
                 break;
             case "login":
-                if (!checkArgs(args, "login", 2)){
-                    break;
-                }
-                try {
-                    server.login(args);
-                } catch (DataAccessException ex){
-                    System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
-                }
-                loggedIn = true;
-                username = args[1];
-                postloginStatus = EscapeSequences.SET_TEXT_COLOR_MAGENTA + "[Logged in as " + username + "]";
+                login(args);
                 break;
             case "logout":
-                server.logout(args);
+                server.logout(args, authToken);
                 loggedIn = false;
                 postloginStatus = null;
                 break;
             case "clear":
-                server.clear(args);
+                try {
+                    server.clear(args);
+                } catch (Exception ex){
+                    System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
+                }
                 break;
             case "create":
-                server.createGame(args);
+                server.createGame(args, authToken);
                 break;
             case "list":
-                server.listGames(args);
+                server.listGames(args, authToken);
                 break;
             case "join":
-                server.joinGame(args);
+                server.joinGame(args, authToken);
                 break;
             default:
                 System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid command.");
@@ -93,6 +76,36 @@ public class ChessClient {
                 return "";
         }
         return args[0];
+    }
+
+    private void register(String[] args) {
+        if (checkArgs(args, "register", 3)){
+            return;
+        }
+        try {
+            authToken = server.register(args).authToken();
+        } catch (Exception ex){
+            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
+        }
+        loggedIn = true;
+        username = args[1];
+        postloginStatus = EscapeSequences.SET_TEXT_COLOR_MAGENTA + "[Logged in as " + username + "]";
+
+    }
+
+    private void login(String[] args) {
+        if (checkArgs(args, "login", 2)){
+            return;
+        }
+        try {
+            authToken = server.login(args).authToken();
+        } catch (Exception ex){
+            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
+        }
+        loggedIn = true;
+        username = args[1];
+        postloginStatus = EscapeSequences.SET_TEXT_COLOR_MAGENTA + "[Logged in as " + username + "]";
+
     }
 
     private void help() {
@@ -138,15 +151,17 @@ public class ChessClient {
                 System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid use of command: " + command);
                 System.out.println("Expected " + numArgsExpected + " arguments but received " + numArgsFound);
                 System.out.println("Use 'help' for information on correct usage.");
-                return false;
+                return true;
             }
         }
-        try {
-            String test = args[numArgsExpected+1];
-        } catch (ArrayIndexOutOfBoundsException ex){
 
+        if (args.length > numArgsExpected+1) {
+            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid use of command: " + command);
+            System.out.println("Expected " + numArgsExpected + " arguments but received " + (args.length-1));
+            System.out.println("Use 'help' for information on correct usage.");
+            return true;
         }
-        return true;
+        return false;
     }
 
 }
