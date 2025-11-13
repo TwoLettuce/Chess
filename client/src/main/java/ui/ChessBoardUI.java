@@ -59,7 +59,7 @@ public class ChessBoardUI {
         } else {
             rowHeader = ROW_HEADER;
         }
-        boolean whiteSquare = false;
+        boolean whiteSquare = true;
 
         for (int row : rowHeader){
             StringBuilder thisRow = new StringBuilder();

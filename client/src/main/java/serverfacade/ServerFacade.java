@@ -1,22 +1,15 @@
 package serverfacade;
 
-import chess.ChessGame;
-import chess.ChessMove;
-import chess.ChessPosition;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import dataaccess.DataAccessException;
 import datamodel.*;
-import ui.ChessBoardUI;
 import ui.EscapeSequences;
 
 import java.net.URI;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.HashMap;
 
 public class ServerFacade {

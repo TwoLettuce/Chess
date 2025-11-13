@@ -17,6 +17,7 @@ public class ChessClient {
     ChessBoardUI drawer = new ChessBoardUI();
     String preloginStatus = EscapeSequences.RESET_BG_COLOR + EscapeSequences.SET_TEXT_COLOR_MAGENTA + "[Not logged in]";
     String postloginStatus;
+    String playingStatus;
     String username;
     String authToken = "";
     boolean loggedIn = false;
@@ -28,7 +29,6 @@ public class ChessClient {
     }
 
     public void run() {
-        System.out.println("♕ 240 Chess Client ♕");
         System.out.println("Type 'help' for commands and usages.");
 
         Scanner scanner = new Scanner(System.in);
@@ -46,17 +46,32 @@ public class ChessClient {
         String[] args = input.split(" ");
         switch (args[0]){
             case "quit":
+                if (loggedIn) {
+                    System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please logout first!");
+                    return "notQuit";
+                }
                 break;
             case "help":
                 help();
                 break;
             case "register":
-                register(args);
+                if (loggedIn) {
+                    System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please logout first!");
+                    return "notQuit";
+                }                register(args);
                 break;
             case "login":
+                if (loggedIn) {
+                    System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please logout first!");
+                    return "notQuit";
+                }
                 login(args);
                 break;
             case "logout":
+                if (!loggedIn) {
+                    System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please login first!");
+                    return "notQuit";
+                }
                 logout(args);
                 break;
             case "clear":
@@ -70,12 +85,24 @@ public class ChessClient {
                 }
                 break;
             case "create":
+                if (!loggedIn) {
+                    System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please login first!");
+                    return "notQuit";
+                }
                 create(args);
                 break;
             case "list":
+                if (!loggedIn) {
+                    System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please login first!");
+                    return "notQuit";
+                }
                 list(args);
                 break;
             case "join":
+                if (!loggedIn) {
+                    System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please login first!");
+                    return "notQuit";
+                }
                 join(args);
                 break;
             default:
@@ -90,52 +117,105 @@ public class ChessClient {
         if (checkArgs(args, "join", 2)){
             return;
         }
-        if (gameDataList.isEmpty()) {
+        if (gameDataList == null || gameDataList.isEmpty()) {
             System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Use 'list' to view potential games first!");
-            return;
-        }
-        args[1] = args[1].toUpperCase();
-
-        if (!args[1].equals("WHITE") && !args[1].equals("BLACK")){
-            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Expected 'white' or 'black' as 1st argument, but got " + args[1]);
             return;
         }
 
         boolean joinedAsBlack = !Objects.equals(args[1], "WHITE");
         int gameIndex;
         try {
-            gameIndex = Integer.parseInt(args[2]);
+            gameIndex = Integer.parseInt(args[2])-1;
         } catch (NumberFormatException ex){
             System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Expected a number as 2nd argument but got '" + args[2] + "'");
             return;
         }
-        if (gameIndex > gameDataList.size()){
+        if (gameIndex > gameDataList.size()-1){
             System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid game");
             return;
         }
-        int gameID = gameDataList.get(gameIndex-1).getGameID();
-        try {
-            server.joinGame(args[1], gameID, authToken);
-            System.out.println("joined " + gameDataList.get(Integer.parseInt(args[2])).getGameName() + " as " + args[1]);
-        } catch (Exception ex){
-//            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please login first!");
-            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
+        int gameID = gameDataList.get(gameIndex).getGameID();
+
+        args[1] = args[1].toUpperCase();
+
+        if (args[1].equals("OBSERVER")) {
+            observerRepl(gameDataList.get(gameIndex));
+        } else if (!args[1].equals("WHITE") && !args[1].equals("BLACK")){
+            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Expected 'white', 'black', or 'observer' as 1st argument, but got " + args[1]);
             return;
         }
-        enterGameRepl(joinedAsBlack, Integer.parseInt(args[2]));
+
+
+        try {
+            server.joinGame(args[1], gameID, authToken);
+            System.out.println("joined " + gameDataList.get(gameIndex).getGameName() + " as " + args[1]);
+        } catch (Exception ex){
+            if (Objects.equals(ex.getMessage(), "unexpected status: 401")){
+                System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please login first!");
+            } else if (Objects.equals(ex.getMessage(), "unexpected status: 403")){
+                System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "That color is already taken!");
+            }
+            return;
+        }
+        playingStatus = "[Playing in game '" + gameDataList.get(gameIndex).getGameName() + "' as " + args[1] + "]";
+        enterGameRepl(joinedAsBlack, gameIndex);
+
     }
 
-    private void enterGameRepl(boolean joinedAsBlack, int gameID) {
+    private void observerRepl(GameData gameData) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Now observing: " + gameData.getGameName());
+        drawer.draw(gameData.getGame().getBoard(), false);
+        System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE);
+        System.out.println("White player: " + gameData.getWhiteUsername());
+        System.out.print(EscapeSequences.SET_TEXT_COLOR_LIGHT_GREY);
+        System.out.println("Black player: " + gameData.getBlackUsername());
+
+        label:
+        while (true) {
+            System.out.print(EscapeSequences.SET_TEXT_COLOR_MAGENTA + "[Observing]" + " >> ");
+            String input = scanner.nextLine();
+            switch (input) {
+                case "quit":
+                    System.out.println("Returning to main menu . . .");
+                    break label;
+                case "help":
+                    System.out.println(EscapeSequences.SET_TEXT_COLOR_YELLOW + "Commands and usages: \nquit - return to menu\nredraw - redraw the board");
+                    break;
+                case "redraw":
+                    drawer.draw(gameData.getGame().getBoard(), false);
+                    break;
+                case null:
+                default:
+                    System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid command");
+                    break;
+            }
+        }
+    }
+
+    private void enterGameRepl(boolean joinedAsBlack, int gameIndex) {
+        GameData gameData = gameDataList.get(gameIndex);
+        if (joinedAsBlack){
+            gameData.setBlackUsername(username);
+        } else {
+            gameData.setWhiteUsername(username);
+        }
         Scanner scanner = new Scanner(System.in);
         printSadStatus();
-        drawer.draw(gameDataList.get(gameID).getGame().getBoard(), joinedAsBlack);
+        drawer.draw(gameDataList.get(gameIndex).getGame().getBoard(), joinedAsBlack);
+        System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE);
+        System.out.println("White player: " + gameData.getWhiteUsername());
+        System.out.print(EscapeSequences.SET_TEXT_COLOR_LIGHT_GREY);
+        System.out.println("Black player: " + gameData.getBlackUsername());
+
         while (true) {
+            System.out.print(EscapeSequences.SET_TEXT_COLOR_MAGENTA + playingStatus + " >> ");
             String input = scanner.nextLine();
             if (Objects.equals(input, "quit")){
                 System.out.println("Returning to main menu . . .");
                 break;
             } else if (Objects.equals(input, "help")) {
-                System.out.println(EscapeSequences.SET_TEXT_COLOR_YELLOW + "Commands and usages: \nquit - exit the game");
+                System.out.println(EscapeSequences.SET_TEXT_COLOR_YELLOW + "Commands and usages: \nquit - return to menu");
             } else {
                 System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Sorry! This part of the game hasn't been implemented yet!");
             }
@@ -249,7 +329,7 @@ public class ChessClient {
                     logout - logout current user
                     list - provides a list of the active chess games
                     create <name> - creates a new chess game with the given name
-                    join <white/black> <number> - join the chess game associated with the number it's listed under, and choose the color you will play as.
+                    join <white/black/observer> <number> - join the chess game associated with the number it's listed under, and choose the color you will play as, or choose to simply observe the game.
                     clear - clear the database
                     """;
         } else {

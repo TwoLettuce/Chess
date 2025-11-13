@@ -134,7 +134,6 @@ public class MySQLDataAccess implements DataAccess {
     @Override
     public void addUserToGame(String authToken, String playerColor, int gameID) throws DataAccessException {
         var username = getAuthData(authToken).username();
-        //UPDATE gameData SET whiteUsername/blackUsername = <username> WHERE gameID = <gameID>;
         try (var conn = DatabaseManager.getConnection()) {
             String userColor;
             if (Objects.equals(playerColor, "WHITE")){
