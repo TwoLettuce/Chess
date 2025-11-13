@@ -1,7 +1,7 @@
 package client;
 
 import chess.ChessGame;
-import datamodel.GameData;
+import datamodels.GameData;
 import org.junit.jupiter.api.*;
 import server.Server;
 import serverfacade.GameDataList;

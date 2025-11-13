@@ -1,6 +1,6 @@
 package serverfacade;
 
-import datamodel.GameData;
+import datamodels.GameData;
 
 import java.util.ArrayList;
 

@@ -2,8 +2,7 @@ package serverfacade;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import datamodel.*;
-import ui.EscapeSequences;
+import datamodels.JoinRequest;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -25,16 +24,16 @@ public class ServerFacade {
         sendRequest(request, null);
     }
 
-    public AuthData register(String[] args) throws Exception {
-        UserData userData = new UserData(args[1], args[2], args[3]);
+    public datamodels.AuthData register(String[] args) throws Exception {
+        datamodels.UserData userData = new datamodels.UserData(args[1], args[2], args[3]);
         var request = buildRequest("POST", "/user", userData,"");
-        return sendRequest(request, AuthData.class);
+        return sendRequest(request, datamodels.AuthData.class);
     }
 
-    public AuthData login(String[] args) throws Exception {
-        LoginData loginData = new LoginData(args[1], args[2]);
+    public datamodels.AuthData login(String[] args) throws Exception {
+        datamodels.LoginData loginData = new datamodels.LoginData(args[1], args[2]);
         var request = buildRequest("POST", "/session", loginData, "");
-        return sendRequest(request, AuthData.class);
+        return sendRequest(request, datamodels.AuthData.class);
     }
 
     public void logout(String[] args, String authToken) throws Exception{
@@ -42,11 +41,11 @@ public class ServerFacade {
         sendRequest(request, null);
     }
 
-    public ArrayList<GameData> listGames(String[] args, String authToken) throws Exception {
+    public ArrayList<datamodels.GameData> listGames(String[] args, String authToken) throws Exception {
         var request = buildRequest("GET", "/game", null, authToken);
         Object response = sendRequest(request, Object.class);
         GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(GameData.class, new GameDataTypeAdapter());
+        builder.registerTypeAdapter(datamodels.GameData.class, new GameDataTypeAdapter());
         Gson deserializer = builder.create();
         String gameDataAsJsonMap = deserializer.toJson(response);
         String gameDataAsJson = deserializer.toJson(deserializer.fromJson((String) gameDataAsJsonMap, HashMap.class).get("games"));
@@ -63,7 +62,7 @@ public class ServerFacade {
     }
 
     public void joinGame(String color, int gameID, String authToken) throws Exception {
-        JoinRequest joinRequest = new JoinRequest(color, gameID);
+        datamodels.JoinRequest joinRequest = new JoinRequest(color, gameID);
         var request = buildRequest("PUT", "/game", joinRequest, authToken);
         sendRequest(request, null);
     }

@@ -1,7 +1,6 @@
 package client;
 
-import chess.ChessGame;
-import datamodel.GameData;
+import datamodels.GameData;
 import serverfacade.GameDataList;
 import serverfacade.ServerFacade;
 
