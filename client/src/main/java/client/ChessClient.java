@@ -83,6 +83,7 @@ public class ChessClient {
                 } catch (Exception ex){
                     System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
                 }
+                System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Database cleared. I hope you're happy.");
                 break;
             case "create":
                 if (!loggedIn) {

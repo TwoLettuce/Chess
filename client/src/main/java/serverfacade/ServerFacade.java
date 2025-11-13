@@ -23,7 +23,6 @@ public class ServerFacade {
     public void clear(String[] args) throws Exception{
         var request = buildRequest("DELETE", "/db", null,  "");
         sendRequest(request, null);
-        System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Database cleared. I hope you're happy.");
     }
 
     public AuthData register(String[] args) throws Exception {

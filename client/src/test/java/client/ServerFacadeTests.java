@@ -1,5 +1,6 @@
 package client;
 
+import jdk.jshell.spi.ExecutionControlProvider;
 import org.junit.jupiter.api.*;
 import server.Server;
 import serverfacade.ServerFacade;
@@ -16,6 +17,11 @@ public class ServerFacadeTests {
     String[] login1 = new String[] {"login", "user1", "pass"};
     String[] login2 = new String[] {"login", "user2", "123o4iunfnpo2nnfne"};
     String[] login3 = new String[] {"login", "user3", "ilovemymommy"};
+
+    String[] game1 = new String[] {"create", "johnny"};
+    String[] game2 = new String[] {"create", "larry"};
+    String[] game3 = new String[] {"create", "stewy"};
+
 
     @BeforeAll
     public static void init() {
@@ -55,7 +61,7 @@ public class ServerFacadeTests {
     public void testClearWithPopulation() throws Exception {
         facade.register(register1);
         facade.register(register2);
-        facade.register(register3).authToken();
+        facade.register(register3);
         Assertions.assertDoesNotThrow(() -> facade.clear(new String[] {"clear"}));
         Assertions.assertThrows(Exception.class, () -> facade.login(login1));
     }
@@ -80,7 +86,50 @@ public class ServerFacadeTests {
     @Test
     public void testLoginUser() throws Exception {
         facade.register(register1);
-        Assertions.assertDoesNotThrow(() -> )
+        Assertions.assertDoesNotThrow(() -> facade.login(login1));
+        facade.register(register2);
+        Assertions.assertDoesNotThrow(() -> facade.login(login2));
+        facade.register(register3);
+        Assertions.assertDoesNotThrow(() -> facade.login(login3));
+    }
+
+    @Test
+    public void testLoginInvalidCredentials() throws Exception {
+        facade.register(register1);
+        Assertions.assertThrows(Exception.class, () -> facade.login(login2));
+    }
+
+    @Test
+    public void testLogout() throws Exception {
+        String authToken = facade.register(register1).authToken();
+        Assertions.assertDoesNotThrow(() -> facade.logout(new String[] {"logout"}, authToken));
+    }
+
+    @Test
+    public void testLogoutWithoutUser() throws Exception {
+        Assertions.assertThrows(Exception.class, () -> facade.logout(null, ""));
+    }
+
+    @Test
+    public void testCreateGame() throws Exception {
+        String authToken = facade.register(register1).authToken();
+        Assertions.assertDoesNotThrow(() -> facade.createGame(game1, authToken));
+        Assertions.assertDoesNotThrow(() -> facade.createGame(game2, authToken));
+    }
+
+    @Test
+    public void testCreateWithoutName() throws Exception {
+        String authToken = facade.register(register1).authToken();
+        Assertions.assertThrows(Exception.class, () -> facade.createGame(new String[] {"create"}, authToken));
+    }
+
+    @Test
+    public void testListGames() throws Exception {
+        String authToken = facade.register(register1).authToken();
+        facade.createGame(game1, authToken);
+        facade.createGame(game2, authToken);
+        facade.createGame(game3, authToken);
+        
     }
 
     @Test
