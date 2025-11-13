@@ -12,7 +12,7 @@ public class ChessClient {
     String preloginStatus = EscapeSequences.RESET_BG_COLOR + EscapeSequences.SET_TEXT_COLOR_MAGENTA + "[Not logged in]";
     String postloginStatus;
     String username;
-    String authToken;
+    String authToken = "";
     boolean loggedIn = false;
 
 
@@ -50,9 +50,8 @@ public class ChessClient {
                 login(args);
                 break;
             case "logout":
-                server.logout(args, authToken);
-                loggedIn = false;
-                postloginStatus = null;
+                logout(args);
+
                 break;
             case "clear":
                 try {
@@ -62,7 +61,7 @@ public class ChessClient {
                 }
                 break;
             case "create":
-                server.createGame(args, authToken);
+                create(args);
                 break;
             case "list":
                 server.listGames(args, authToken);
@@ -76,6 +75,37 @@ public class ChessClient {
                 return "";
         }
         return args[0];
+    }
+
+    private void create(String[] args) {
+        if (checkArgs(args, "create", 1)){
+            return;
+        }
+        int gameID;
+        try {
+            gameID = server.createGame(args, authToken);
+        } catch (Exception ex){
+            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
+            return;
+        }
+        System.out.println(EscapeSequences.SET_TEXT_COLOR_MAGENTA + "Game created with ID: " + gameID);
+    }
+
+    private void logout(String[] args) {
+        if (checkArgs(args, "logout", 0)){
+            return;
+        } else if (Objects.equals(authToken, "")) {
+            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "This command is only available once logged in!");
+            return;
+        }
+        try {
+            server.logout(args, authToken);
+        } catch (Exception ex) {
+            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
+        }
+        loggedIn = false;
+        postloginStatus = null;
+        authToken = "";
     }
 
     private void register(String[] args) {

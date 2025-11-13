@@ -6,15 +6,20 @@ import chess.ChessPosition;
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import datamodel.AuthData;
+import datamodel.GameData;
 import datamodel.LoginData;
 import datamodel.UserData;
 import ui.ChessBoardUI;
+import ui.EscapeSequences;
 
 import java.net.URI;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.HashMap;
 
 public class ServerFacade {
     private final HttpClient client = HttpClient.newHttpClient();
@@ -25,8 +30,8 @@ public class ServerFacade {
 
 
     public void clear(String[] args) throws Exception{
-        var httpRequest = buildRequest("DELETE", "/db", null, null, "");
-        System.out.println("clear");
+        buildRequest("DELETE", "/db", null, null, "");
+        System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Database cleared. I hope you're happy.");
     }
 
     public AuthData register(String[] args) throws Exception {
@@ -39,11 +44,11 @@ public class ServerFacade {
         return buildRequest("POST", "/session", loginData, AuthData.class, "");
     }
 
-    public void logout(String[] args, String authToken){
-        System.out.println("logout");
+    public void logout(String[] args, String authToken) throws Exception{
+        buildRequest("DELETE", "/session", null, null, authToken);
     }
 
-    public void listGames(String[] args, String authToken) {
+    public ArrayList<GameData> listGames(String[] args, String authToken) {
         ChessBoardUI drawer = new ChessBoardUI();
         ChessGame game = new ChessGame();
         try {
@@ -52,10 +57,15 @@ public class ServerFacade {
             //this won't happen
         }
         drawer.draw(game.getBoard(), false);
+        return null;
     }
 
-    public void createGame(String[] args, String authToken){
-        System.out.println("createGame");
+    public int createGame(String[] args, String authToken) throws Exception {
+        HashMap<String, String> gameName = new HashMap<>();
+        gameName.put("gameName", args[1]);
+        return ((Double) buildRequest("POST", "/game", gameName, HashMap.class, authToken).get("gameID")).intValue();
+
+
     }
 
     public void joinGame(String[] args, String authToken){
@@ -76,7 +86,7 @@ public class ServerFacade {
 
     private <T> T getResponseBody(HttpResponse<String> response, Class<T> responseClass) throws Exception {
         int status = response.statusCode();
-        if (status / 200 != 2){
+        if (status / 100 != 2){
             throw new Exception("unexpected status: " + status);
         }
         if (responseClass != null){
