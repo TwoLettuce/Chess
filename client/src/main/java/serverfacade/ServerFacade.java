@@ -48,15 +48,9 @@ public class ServerFacade {
         buildRequest("DELETE", "/session", null, null, authToken);
     }
 
-    public ArrayList<GameData> listGames(String[] args, String authToken) {
-        ChessBoardUI drawer = new ChessBoardUI();
-        ChessGame game = new ChessGame();
-        try {
-            game.makeMove(new ChessMove(new ChessPosition(2, 5), new ChessPosition(4, 5), null));
-        } catch (Exception e){
-            //this won't happen
-        }
-        drawer.draw(game.getBoard(), false);
+    public ArrayList<GameData> listGames(String[] args, String authToken) throws Exception {
+        HashMap mapOfGames = buildRequest("GET", "/game", null, HashMap.class, authToken);
+        var listOfGames = mapOfGames.get("games");
         return null;
     }
 

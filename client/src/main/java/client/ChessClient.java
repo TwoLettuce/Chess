@@ -1,14 +1,18 @@
 package client;
 
+import datamodel.GameData;
 import serverfacade.ServerFacade;
 
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Scanner;
 
+import ui.ChessBoardUI;
 import ui.EscapeSequences;
 
 public class ChessClient {
     ServerFacade server;
+    ChessBoardUI drawer = new ChessBoardUI();
     String preloginStatus = EscapeSequences.RESET_BG_COLOR + EscapeSequences.SET_TEXT_COLOR_MAGENTA + "[Not logged in]";
     String postloginStatus;
     String username;
@@ -64,7 +68,7 @@ public class ChessClient {
                 create(args);
                 break;
             case "list":
-                server.listGames(args, authToken);
+                list(args);
                 break;
             case "join":
                 server.joinGame(args, authToken);
@@ -76,6 +80,27 @@ public class ChessClient {
         }
         return args[0];
     }
+
+    private void list(String[] args) {
+        if (checkArgs(args, "list", 0)){
+            return;
+        }
+        ArrayList<GameData> listOfGames;
+        try {
+            listOfGames = server.listGames(args, authToken);
+        } catch (Exception ex) {
+            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
+            return;
+        }
+        int i = 1;
+        for (GameData gameData : listOfGames){
+            System.out.println(EscapeSequences.SET_BG_COLOR_WHITE + i + ".");
+            System.out.println(gameData.getGameName() + "\n");
+            drawer.draw(gameData.getGame().getBoard(), false);
+            System.out.println("\nWhite player: " + gameData.getWhiteUsername());
+            System.out.println("Black player: " + gameData.getBlackUsername() + "\n");
+        }
+        }
 
     private void create(String[] args) {
         if (checkArgs(args, "create", 1)){
@@ -115,7 +140,7 @@ public class ChessClient {
         try {
             authToken = server.register(args).authToken();
         } catch (Exception ex){
-            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
+            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Username already taken!");
         }
         loggedIn = true;
         username = args[1];
@@ -130,7 +155,8 @@ public class ChessClient {
         try {
             authToken = server.login(args).authToken();
         } catch (Exception ex){
-            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
+            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid credentials!");
+            return;
         }
         loggedIn = true;
         username = args[1];
