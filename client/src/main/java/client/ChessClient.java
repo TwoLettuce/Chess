@@ -180,7 +180,8 @@ public class ChessClient {
                     System.out.println("Returning to main menu . . .");
                     break label;
                 case "help":
-                    System.out.println(EscapeSequences.SET_TEXT_COLOR_YELLOW + "Commands and usages: \nquit - return to menu\nredraw - redraw the board");
+                    System.out.println(EscapeSequences.SET_TEXT_COLOR_YELLOW + "Commands and usages: \n" +
+                            "quit - return to menu\nredraw - redraw the board");
                     break;
                 case "redraw":
                     drawer.draw(gameData.getGame().getBoard(), false);
@@ -321,19 +322,19 @@ public class ChessClient {
 
     private void help() {
         System.out.println(EscapeSequences.SET_TEXT_COLOR_YELLOW + "Commands and usages:");
-        String comsAndUsages;
+        String commandsAndUsages;
         if (loggedIn) {
-            comsAndUsages = """
+            commandsAndUsages = """
                     quit - exit the program
                     help - retrieve a list of available commands
                     logout - logout current user
                     list - provides a list of the active chess games
                     create <name> - creates a new chess game with the given name
-                    join <white/black/observer> <number> - join the chess game associated with the number it's listed under, and choose the color you will play as, or choose to simply observe the game.
+                    join <white/black/observer> <number> - join as a player or observer, use number from list
                     clear - clear the database
-                    """;
+                   \s""";
         } else {
-            comsAndUsages = """
+            commandsAndUsages = """
                     quit - exit the program
                     help - retrieve a list of available commands
                     register <username> <password> <email> - register with a username, password, and email
@@ -341,7 +342,7 @@ public class ChessClient {
                     clear - clear the database
                     """;
         }
-        System.out.println(comsAndUsages);
+        System.out.println(commandsAndUsages);
     }
 
     private void printStatus() {
