@@ -5,10 +5,7 @@ import chess.ChessMove;
 import chess.ChessPosition;
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
-import datamodel.AuthData;
-import datamodel.GameData;
-import datamodel.LoginData;
-import datamodel.UserData;
+import datamodel.*;
 import ui.ChessBoardUI;
 import ui.EscapeSequences;
 
@@ -62,8 +59,10 @@ public class ServerFacade {
 
     }
 
-    public void joinGame(String[] args, String authToken){
-        System.out.println("joinGame");
+    public void joinGame(String color, int gameID, String authToken) throws Exception {
+        JoinRequest request = new JoinRequest(color, gameID);
+        buildRequest("DELETE", "/session", request, null, authToken);
+
     }
 
 

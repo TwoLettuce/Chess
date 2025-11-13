@@ -1,6 +1,7 @@
 package client;
 
 import datamodel.GameData;
+import serverfacade.GameDataList;
 import serverfacade.ServerFacade;
 
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ public class ChessClient {
     String username;
     String authToken = "";
     boolean loggedIn = false;
+    GameDataList gameDataList = new GameDataList();
 
 
     public ChessClient(String serverURL){
@@ -71,7 +73,7 @@ public class ChessClient {
                 list(args);
                 break;
             case "join":
-                server.joinGame(args, authToken);
+                join(args);
                 break;
             default:
                 System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid command.");
@@ -79,6 +81,34 @@ public class ChessClient {
                 return "";
         }
         return args[0];
+    }
+
+    private void join(String[] args) {
+        if (checkArgs(args, "join", 2)){
+            return;
+        }
+        if (gameDataList.isEmpty()) {
+            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Use 'list' to view potential games first!");
+            return;
+        }
+        args[1] = args[1].toUpperCase();
+
+        boolean joinedAsBlack;
+        //TODO: CLEAN UP THIS IF STATEMENT
+        joinedAsBlack = !Objects.equals(args[1], "WHITE");
+        int gameID = gameDataList.get(Integer.parseInt(args[2])).getGameID();
+        try {
+            server.joinGame(args[1], gameID, authToken);
+            System.out.println("joined " + gameDataList.get(Integer.parseInt(args[2])).getGameName() + "as " + args[1]);
+        } catch (Exception ex){
+            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
+            return;
+        }
+        enterGameRepl(joinedAsBlack);
+    }
+
+    private void enterGameRepl(boolean joinedAsBlack) {
+
     }
 
     private void list(String[] args) {
@@ -92,6 +122,7 @@ public class ChessClient {
             System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
             return;
         }
+        gameDataList = (GameDataList) listOfGames;
         int i = 1;
         for (GameData gameData : listOfGames){
             System.out.println(EscapeSequences.SET_BG_COLOR_WHITE + i + ".");
@@ -174,7 +205,7 @@ public class ChessClient {
                     logout - logout current user
                     list - provides a list of the active chess games
                     create <name> - creates a new chess game with the given name
-                    join <number> <white/black> - join the chess game associated with the number it's listed under, and choose the color you will play as.
+                    join <white/black> <number> - join the chess game associated with the number it's listed under, and choose the color you will play as.
                     clear - clear the database
                     """;
         } else {
