@@ -64,9 +64,10 @@ public class GameDataTypeAdapter extends TypeAdapter<GameData> {
 
         jsonReader.beginObject();
         while (jsonReader.hasNext()){
-            if(Objects.equals(jsonReader.nextName(), "currentTurn")){
+            String identifier = jsonReader.nextName();
+            if(Objects.equals(identifier, "currentTurn")){
                 currentTurn = ChessGame.TeamColor.valueOf(jsonReader.nextString());
-            } else if (Objects.equals(jsonReader.nextName(), "board")){
+            } else if (Objects.equals(identifier, "board")){
                 board = buildBoard(jsonReader);
             }
         }
@@ -94,17 +95,18 @@ public class GameDataTypeAdapter extends TypeAdapter<GameData> {
                 while (jsonReader.hasNext()){
                     String identifier = jsonReader.nextName();
                     switch (identifier){
-                        case "pieceType" -> pieceType = ChessPiece.PieceType.valueOf(jsonReader.nextString());
-                        case "teamColor" -> teamColor = ChessGame.TeamColor.valueOf(jsonReader.nextString());
+                        case "type" -> pieceType = ChessPiece.PieceType.valueOf(jsonReader.nextString());
+                        case "pieceColor" -> teamColor = ChessGame.TeamColor.valueOf(jsonReader.nextString());
                         case "hasMoved" -> jsonReader.nextBoolean();
                     }
                 }
-
+                jsonReader.endObject();
                 board[i][j] = new ChessPiece(teamColor, pieceType, hasMoved);
             }
             jsonReader.endArray();
         }
-
+        jsonReader.endArray();
+        jsonReader.endObject();
         return new ChessBoard(board);
     }
 }

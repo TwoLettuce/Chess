@@ -57,9 +57,7 @@ public class ServerFacade {
         builder.registerTypeAdapter(GameData.class, new GameDataTypeAdapter());
         Gson deserializer = builder.create();
         String gameDataAsJsonMap = deserializer.toJson(response);
-        System.out.println(gameDataAsJsonMap.substring(0, 100));
         String gameDataAsJson = deserializer.toJson(deserializer.fromJson((String) gameDataAsJsonMap, HashMap.class).get("games"));
-        System.out.println(gameDataAsJson);
         return deserializer.fromJson((String) gameDataAsJson, GameDataList.class);
     }
 
@@ -74,9 +72,8 @@ public class ServerFacade {
 
     public void joinGame(String color, int gameID, String authToken) throws Exception {
         JoinRequest joinRequest = new JoinRequest(color, gameID);
-        var request = buildRequest("DELETE", "/session", joinRequest, authToken);
+        var request = buildRequest("PUT", "/game", joinRequest, authToken);
         sendRequest(request, null);
-
     }
 
 
