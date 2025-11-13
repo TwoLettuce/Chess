@@ -1,15 +1,17 @@
 package client;
 
-import jdk.jshell.spi.ExecutionControlProvider;
+import chess.ChessGame;
+import datamodel.GameData;
 import org.junit.jupiter.api.*;
 import server.Server;
+import serverfacade.GameDataList;
 import serverfacade.ServerFacade;
 
 
 public class ServerFacadeTests {
 
     private static Server server;
-    private static final ServerFacade facade = new ServerFacade("http://localhost:8080");
+    private static ServerFacade facade;
     String[] register1 = new String[] {"register", "user1", "pass", "email1"};
     String[] register2 = new String[] {"register", "user2", "123o4iunfnpo2nnfne", "email2"};
     String[] register3 = new String[] {"register", "user3", "ilovemymommy", "email3"};
@@ -28,6 +30,7 @@ public class ServerFacadeTests {
         server = new Server();
         var port = server.run(0);
         System.out.println("Started test HTTP server on " + port);
+        facade = new ServerFacade("http://localhost:" + port);
     }
 
     @AfterEach
@@ -126,15 +129,51 @@ public class ServerFacadeTests {
     @Test
     public void testListGames() throws Exception {
         String authToken = facade.register(register1).authToken();
-        facade.createGame(game1, authToken);
-        facade.createGame(game2, authToken);
-        facade.createGame(game3, authToken);
-        
+        int id1 = facade.createGame(game1, authToken);
+        int id2 = facade.createGame(game2, authToken);
+        int id3 = facade.createGame(game3, authToken);
+        GameDataList expecedGameDataList = new GameDataList();
+        expecedGameDataList.add(new GameData(id1, null, null, "johnny", new ChessGame()));
+        expecedGameDataList.add(new GameData(id2, null, null, "larry", new ChessGame()));
+        expecedGameDataList.add(new GameData(id3, null, null, "stewy", new ChessGame()));
+
+        GameDataList gameDataList = (GameDataList) facade.listGames(new String[] {"games"}, authToken);
+        Assertions.assertEquals(gameDataList,expecedGameDataList);
     }
 
     @Test
-    public void sampleTest() {
-        Assertions.assertTrue(true);
+    public void testEmptyList() throws Exception {
+        String authToken = facade.register(register1).authToken();
+        GameDataList expecedGameDataList = new GameDataList();
+        GameDataList gameDataList = (GameDataList) facade.listGames(new String[] {"games"}, authToken);
+        Assertions.assertEquals(gameDataList,expecedGameDataList);
+
+    }
+
+    @Test
+    public void testJoinGame() throws Exception {
+        String authToken = facade.register(register1).authToken();
+        int id1 = facade.createGame(game1, authToken);
+        facade.joinGame("WHITE", id1, authToken);
+
+        GameDataList expectedGameDataList = new GameDataList();
+        expectedGameDataList.add(new GameData(id1, register1[1], null, "johnny", new ChessGame()));
+        GameDataList gameDataList = (GameDataList) facade.listGames(new String[] {"games"}, authToken);
+
+        Assertions.assertEquals(gameDataList,expectedGameDataList);
+        String auth2 = facade.register(register2).authToken();
+
+        facade.joinGame("BLACK", id1, auth2);
+        expectedGameDataList.removeFirst();
+        expectedGameDataList.add(new GameData(id1, register1[1], register2[1], "johnny", new ChessGame()));
+        gameDataList = (GameDataList) facade.listGames(new String[] {"games"}, authToken);
+        Assertions.assertEquals(expectedGameDataList, gameDataList);
+    }
+
+    @Test
+    public void testJoinNonexistentGame() throws Exception {
+        String authToken = facade.register(register1).authToken();
+        Assertions.assertThrows(Exception.class, () -> facade.joinGame("WHITE", 9999, authToken));
     }
 
 }
