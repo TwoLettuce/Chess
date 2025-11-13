@@ -13,7 +13,7 @@ import static java.lang.Math.abs;
 
 public class ChessBoard {
 
-    private final ChessPiece[][] board = new ChessPiece[8][8];
+    private ChessPiece[][] board = new ChessPiece[8][8];
 
     public ChessBoard() {
 
@@ -26,6 +26,10 @@ public class ChessBoard {
                 addPiece(new ChessPosition(row, col), board.getPiece(new ChessPosition(row, col)));
             }
         }
+    }
+
+    public ChessBoard(ChessPiece[][] board){
+        this.board = board;
     }
 
     /**

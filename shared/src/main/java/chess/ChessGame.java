@@ -21,6 +21,10 @@ public class ChessGame {
     public ChessGame() {
         board.resetBoard();
     }
+    public ChessGame(TeamColor currentTurn, ChessBoard board){
+        this.currentTurn = currentTurn;
+        this.board = board;
+    }
 
     /**
      * @return Which team's turn it is

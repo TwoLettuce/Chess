@@ -4,6 +4,7 @@ import chess.ChessGame;
 import chess.ChessMove;
 import chess.ChessPosition;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import dataaccess.DataAccessException;
 import datamodel.*;
 import ui.ChessBoardUI;
@@ -27,53 +28,68 @@ public class ServerFacade {
 
 
     public void clear(String[] args) throws Exception{
-        buildRequest("DELETE", "/db", null, null, "");
+        var request = buildRequest("DELETE", "/db", null,  "");
+        sendRequest(request, null);
         System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Database cleared. I hope you're happy.");
     }
 
     public AuthData register(String[] args) throws Exception {
         UserData userData = new UserData(args[1], args[2], args[3]);
-        return buildRequest("POST", "/user", userData, AuthData.class, "");
+        var request = buildRequest("POST", "/user", userData,"");
+        return sendRequest(request, AuthData.class);
     }
 
     public AuthData login(String[] args) throws Exception {
         LoginData loginData = new LoginData(args[1], args[2]);
-        return buildRequest("POST", "/session", loginData, AuthData.class, "");
+        var request = buildRequest("POST", "/session", loginData, "");
+        return sendRequest(request, AuthData.class);
     }
 
     public void logout(String[] args, String authToken) throws Exception{
-        buildRequest("DELETE", "/session", null, null, authToken);
+        var request = buildRequest("DELETE", "/session", null, authToken);
+        sendRequest(request, null);
     }
 
     public ArrayList<GameData> listGames(String[] args, String authToken) throws Exception {
-        HashMap mapOfGames = buildRequest("GET", "/game", null, HashMap.class, authToken);
-        var listOfGames = mapOfGames.get("games");
-        return null;
+        var request = buildRequest("GET", "/game", null, authToken);
+        Object response = sendRequest(request, Object.class);
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(GameData.class, new GameDataTypeAdapter());
+        Gson deserializer = builder.create();
+        String gameDataAsJsonMap = deserializer.toJson(response);
+        System.out.println(gameDataAsJsonMap.substring(0, 100));
+        String gameDataAsJson = deserializer.toJson(deserializer.fromJson((String) gameDataAsJsonMap, HashMap.class).get("games"));
+        System.out.println(gameDataAsJson);
+        return deserializer.fromJson((String) gameDataAsJson, GameDataList.class);
     }
 
     public int createGame(String[] args, String authToken) throws Exception {
         HashMap<String, String> gameName = new HashMap<>();
         gameName.put("gameName", args[1]);
-        return ((Double) buildRequest("POST", "/game", gameName, HashMap.class, authToken).get("gameID")).intValue();
+        var request = buildRequest("POST", "/game", gameName, authToken);
+        return ((Double) sendRequest(request, HashMap.class).get("gameID")).intValue();
 
 
     }
 
     public void joinGame(String color, int gameID, String authToken) throws Exception {
-        JoinRequest request = new JoinRequest(color, gameID);
-        buildRequest("DELETE", "/session", request, null, authToken);
+        JoinRequest joinRequest = new JoinRequest(color, gameID);
+        var request = buildRequest("DELETE", "/session", joinRequest, authToken);
+        sendRequest(request, null);
 
     }
 
 
-    private <T> T buildRequest(String method, String path, Object requestBody, Class<T> responseClass, String authToken) throws Exception {
+    private HttpRequest buildRequest(String method, String path, Object requestBody, String authToken) throws Exception {
         URI uri = new URI(serverURL + path);
         var requestBuilder = HttpRequest.newBuilder(uri)
                 .method(method, buildBody(requestBody))
                 .header("authorization", authToken);
-        var request = requestBuilder.build();
-        var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        return requestBuilder.build();
+    }
 
+    private <T> T sendRequest(HttpRequest request, Class<T> responseClass) throws Exception{
+        var response = client.send(request, HttpResponse.BodyHandlers.ofString());
         return getResponseBody(response, responseClass);
     }
 

@@ -57,11 +57,12 @@ public class ChessClient {
                 break;
             case "logout":
                 logout(args);
-
                 break;
             case "clear":
                 try {
                     server.clear(args);
+                    authToken = "";
+                    gameDataList = null;
                 } catch (Exception ex){
                     System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
                 }

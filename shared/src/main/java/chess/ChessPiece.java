@@ -19,6 +19,12 @@ public class ChessPiece {
         this.type = type;
     }
 
+    public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type, boolean hasMoved){
+        this.pieceColor = pieceColor;
+        this.type = type;
+        this.hasMoved = hasMoved;
+    }
+
     /**
      * The various different chess piece options
      */
