@@ -45,19 +45,23 @@ public class ChessClient {
         String[] args = input.split(" ");
         switch (args[0]){
             case "quit":
-                if (loggedIn) {
-                    System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please logout first!");
+                if (checkArgs(args, "quit", 0)){
                     return "notQuit";
+                }
+                if (loggedIn) {
+                    logout(args);
                 }
                 break;
             case "help":
+                checkArgs(args, "help", 0);
                 help();
                 break;
             case "register":
                 if (loggedIn) {
                     System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please logout first!");
                     return "notQuit";
-                }                register(args);
+                }
+                register(args);
                 break;
             case "login":
                 if (loggedIn) {
@@ -74,6 +78,9 @@ public class ChessClient {
                 logout(args);
                 break;
             case "clear":
+                if (checkArgs(args, "clear", 0)){
+                    return "notQuit";
+                }
                 try {
                     server.clear(args);
                     authToken = "";
@@ -122,7 +129,6 @@ public class ChessClient {
             return;
         }
 
-        boolean joinedAsBlack = !Objects.equals(args[1], "WHITE");
         int gameIndex;
         try {
             gameIndex = Integer.parseInt(args[2])-1;
@@ -137,6 +143,7 @@ public class ChessClient {
         int gameID = gameDataList.get(gameIndex).getGameID();
 
         args[1] = args[1].toUpperCase();
+        boolean joinedAsBlack = !Objects.equals(args[1], "WHITE");
 
         if (args[1].equals("OBSERVER")) {
             observerRepl(gameDataList.get(gameIndex));
@@ -297,6 +304,7 @@ public class ChessClient {
             authToken = server.register(args).authToken();
         } catch (Exception ex){
             System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Username already taken!");
+            return;
         }
         loggedIn = true;
         username = args[1];
@@ -310,13 +318,13 @@ public class ChessClient {
         }
         try {
             authToken = server.login(args).authToken();
+            loggedIn = true;
+            username = args[1];
+            postloginStatus = EscapeSequences.SET_TEXT_COLOR_MAGENTA + "[Logged in as " + username + "]";
         } catch (Exception ex){
             System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid credentials!");
-            return;
         }
-        loggedIn = true;
-        username = args[1];
-        postloginStatus = EscapeSequences.SET_TEXT_COLOR_MAGENTA + "[Logged in as " + username + "]";
+
 
     }
 
@@ -339,8 +347,7 @@ public class ChessClient {
                     help - retrieve a list of available commands
                     register <username> <password> <email> - register with a username, password, and email
                     login <username> <password> - login with a username and password that is already registered
-                    clear - clear the database
-                    """;
+                    clear - clear the database""";
         }
         System.out.println(commandsAndUsages);
     }
