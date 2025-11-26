@@ -21,6 +21,7 @@ import websocket.messages.ServerMessage;
 import java.io.IOException;
 
 import java.util.List;
+import java.util.Objects;
 
 public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler {
     private final Gson serializer = new Gson();
@@ -115,6 +116,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         try {
             GameData gameData = dataAccess.getGame(gameID);
             try {
+                validateThisPlayerCanMove(gameData, player);
                 gameData.getGame().makeMove(move);
                 dataAccess.updateGame(gameID, gameData.getGame());
             }
@@ -134,6 +136,20 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
                     "Server Error.");
             connections.sendMessage(message, session);
+        }
+    }
+
+    private void validateThisPlayerCanMove(GameData gameData, String player) throws InvalidMoveException {
+        if (Objects.equals(player, gameData.getWhiteUsername())){
+            if (gameData.getGame().getTeamTurn() != ChessGame.TeamColor.WHITE){
+                throw new InvalidMoveException("Not your turn!");
+            }
+        } else if (Objects.equals(player, gameData.getBlackUsername())){
+            if (gameData.getGame().getTeamTurn() != ChessGame.TeamColor.BLACK){
+                throw new InvalidMoveException("Not your turn!");
+            }
+        } else {
+            throw new InvalidMoveException("Can't move as Observer!");
         }
     }
 
