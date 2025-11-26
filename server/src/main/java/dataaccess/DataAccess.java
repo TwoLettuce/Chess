@@ -5,7 +5,6 @@ import datamodel.GameData;
 import datamodel.UserData;
 
 import java.util.Collection;
-import java.util.UUID;
 
 public interface DataAccess {
     UserData getUser(String username) throws DataAccessException;

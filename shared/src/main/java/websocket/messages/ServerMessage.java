@@ -10,6 +10,7 @@ import java.util.Objects;
  */
 public class ServerMessage {
     ServerMessageType serverMessageType;
+    String message;
 
     public enum ServerMessageType {
         LOAD_GAME,
@@ -17,8 +18,13 @@ public class ServerMessage {
         NOTIFICATION
     }
 
-    public ServerMessage(ServerMessageType type) {
+    public ServerMessage(ServerMessageType type, String message) {
         this.serverMessageType = type;
+        this.message = message;
+    }
+
+    public String getMessage() {
+        return this.message;
     }
 
     public ServerMessageType getServerMessageType() {
@@ -33,7 +39,7 @@ public class ServerMessage {
         if (!(o instanceof ServerMessage that)) {
             return false;
         }
-        return getServerMessageType() == that.getServerMessageType();
+        return getServerMessageType() == that.getServerMessageType() && Objects.equals(message, that.getMessage());
     }
 
     @Override

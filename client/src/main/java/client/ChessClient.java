@@ -1,5 +1,6 @@
 package client;
 
+import com.sun.nio.sctp.AbstractNotificationHandler;
 import datamodels.GameData;
 import serverfacade.GameDataList;
 import serverfacade.ServerFacade;
@@ -10,9 +11,13 @@ import java.util.Scanner;
 
 import ui.ChessBoardUI;
 import ui.EscapeSequences;
+import websocket.ServerMessageHandler;
+import websocket.WebSocketFacade;
+import websocket.messages.ServerMessage;
 
-public class ChessClient {
+public class ChessClient implements ServerMessageHandler {
     ServerFacade server;
+    WebSocketFacade webSocket;
     ChessBoardUI drawer = new ChessBoardUI();
     String preloginStatus = EscapeSequences.RESET_BG_COLOR + EscapeSequences.SET_TEXT_COLOR_MAGENTA + "[Not logged in]";
     String postloginStatus;
@@ -25,6 +30,7 @@ public class ChessClient {
 
     public ChessClient(String serverURL){
         server = new ServerFacade(serverURL);
+        webSocket = new WebSocketFacade(serverURL, this);
     }
 
     public void run() {
@@ -156,6 +162,7 @@ public class ChessClient {
         try {
             server.joinGame(args[1], gameID, authToken);
             System.out.println("joined " + gameDataList.get(gameIndex).getGameName() + " as " + args[1]);
+            webSocket.connectToGame(authToken, gameID, args[1]);
         } catch (Exception ex){
             if (Objects.equals(ex.getMessage(), "unexpected status: 401")){
                 System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please login first!");
@@ -383,4 +390,8 @@ public class ChessClient {
         return false;
     }
 
+    @Override
+    public void notify(ServerMessage serverMessage) {
+        System.out.println(EscapeSequences.SET_TEXT_COLOR_WHITE + serverMessage.getMessage());
+    }
 }

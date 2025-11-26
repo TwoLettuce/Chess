@@ -6,7 +6,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
-//import dataaccess.MemoryDataAccess;
 import datamodel.AuthData;
 import datamodel.JoinRequest;
 import datamodel.LoginData;
@@ -16,6 +15,8 @@ import io.javalin.http.Context;
 import service.GameService;
 import service.UserService;
 import service.DataService;
+import websocket.WebSocketHandler;
+
 import java.util.Map;
 
 public class Server {
@@ -27,6 +28,7 @@ public class Server {
     private final DataService dataService;
     private final GameService gameService;
     private DataAccess dataAccess;
+    private final WebSocketHandler wsHandler;
 
     public Server() {
         try {
@@ -37,7 +39,15 @@ public class Server {
         userService = new UserService(dataAccess);
         dataService = new DataService(dataAccess);
         gameService = new GameService(dataAccess);
+        wsHandler = new WebSocketHandler(dataAccess);
         server = Javalin.create(config -> config.staticFiles.add("web"));
+
+        server.ws("/ws", ws -> {
+                ws.onConnect(wsHandler);
+                ws.onMessage(wsHandler);
+                ws.onClose(wsHandler);
+            }
+        );
 
         // Register your endpoints and exception handlers here.
         server.delete("db", this::clear);
