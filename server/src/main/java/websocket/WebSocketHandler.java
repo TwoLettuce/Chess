@@ -3,17 +3,20 @@ package websocket;
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import io.javalin.websocket.*;
+import jakarta.websocket.OnMessage;
 import org.jetbrains.annotations.NotNull;
 import websocket.commands.ConnectCommand;
 import websocket.commands.MoveCommand;
 import websocket.commands.UserGameCommand;
 import dataaccess.DataAccess;
 import org.eclipse.jetty.websocket.api.Session;
+import websocket.messages.GameMessage;
 import websocket.messages.ServerMessage;
 
 import java.io.IOException;
 
 import java.util.List;
+import java.util.Map;
 
 public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler {
     private final Gson serializer = new Gson();
@@ -29,6 +32,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         System.out.println("Websocket connection established successfully");
 
         ctx.enableAutomaticPings();
+    }
+
+    @OnMessage
+    public void onMessage(String msg){
+
     }
 
     @Override
@@ -71,12 +79,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void connect(int gameID, String color, String player, Session session) throws IOException, DataAccessException {
         ServerMessage gameMessage = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME,
-                dataAccess.getGame(gameID).getGame().getBoard().toString());
-        connections.sendMessage(gameMessage, session);
+                dataAccess.getGame(gameID).getGame().toString());
         connections.add(session);
+        connections.sendMessage(gameMessage, session);
         try {
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
-                    player + " has joined the game as " + color + ".");
+                    player + " has joined the game.");
             connections.broadcastMessage(message, List.of(session));
         } catch (IOException ex){
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR,
@@ -88,8 +96,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void makeMove(String player, String move, int gameID, Session session) throws IOException {
         try {
-            ServerMessage gameMessage = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME,
-                    dataAccess.getGame(gameID).getGame().toString());
+            GameMessage gameMessage = new GameMessage(ServerMessage.ServerMessageType.LOAD_GAME,
+                    dataAccess.getGame(gameID).getGame());
             connections.sendMessage(gameMessage, session);
 
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,

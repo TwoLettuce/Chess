@@ -1,5 +1,6 @@
 package websocket;
 
+import com.google.gson.Gson;
 import org.eclipse.jetty.websocket.api.Session;
 import websocket.messages.ServerMessage;
 
@@ -31,7 +32,7 @@ public class ConnectionManager {
     //send message to a single user
     public void sendMessage(ServerMessage message, Session session) throws IOException {
         if (session.isOpen()){
-            session.getRemote().sendString(message.getMessage());
+            session.getRemote().sendString(new Gson().toJson(message));
         }
     }
 }
