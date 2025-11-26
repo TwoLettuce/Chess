@@ -44,31 +44,37 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         UserGameCommand.CommandType commandType = serializer.fromJson(ctx.message(), UserGameCommand.class).getCommandType();
         String player;
         int gameID;
-        switch (commandType){
-            case CONNECT:
-                ConnectCommand connectCommand = serializer.fromJson(ctx.message(), ConnectCommand.class);
-                player = dataAccess.getAuthData(connectCommand.getAuthToken()).username();
-                gameID = connectCommand.getGameID();
-                String color = connectCommand.getColor();
-                connect(gameID, color, player, ctx.session);
-                break;
-            case MAKE_MOVE:
-                MoveCommand moveCommand = serializer.fromJson(ctx.message(), MoveCommand.class);
-                player = dataAccess.getAuthData(moveCommand.getAuthToken()).username();
-                String move = moveCommand.getMove();
-                gameID = moveCommand.getGameID();
-                makeMove(player, move, gameID, ctx.session);
-                break;
-            case RESIGN:
-                UserGameCommand resignCommand = serializer.fromJson(ctx.message(), UserGameCommand.class);
-                player = dataAccess.getAuthData(resignCommand.getAuthToken()).username();
-                resign(player, ctx.session);
-                break;
-            case LEAVE:
-                UserGameCommand leaveCommand = serializer.fromJson(ctx.message(), UserGameCommand.class);
-                player = dataAccess.getAuthData(leaveCommand.getAuthToken()).username();
-                leave(player, ctx.session);
-                break;
+        try {
+            switch (commandType){
+                case CONNECT:
+                    ConnectCommand connectCommand = serializer.fromJson(ctx.message(), ConnectCommand.class);
+                    player = dataAccess.getAuthData(connectCommand.getAuthToken()).username();
+                    gameID = connectCommand.getGameID();
+                    String color = connectCommand.getColor();
+                    connect(gameID, color, player, ctx.session);
+                    break;
+                case MAKE_MOVE:
+                    MoveCommand moveCommand = serializer.fromJson(ctx.message(), MoveCommand.class);
+                    player = dataAccess.getAuthData(moveCommand.getAuthToken()).username();
+                    String move = moveCommand.getMove();
+                    gameID = moveCommand.getGameID();
+                    makeMove(player, move, gameID, ctx.session);
+                    break;
+                case RESIGN:
+                    UserGameCommand resignCommand = serializer.fromJson(ctx.message(), UserGameCommand.class);
+                    player = dataAccess.getAuthData(resignCommand.getAuthToken()).username();
+                    resign(player, ctx.session);
+                    break;
+                case LEAVE:
+                    UserGameCommand leaveCommand = serializer.fromJson(ctx.message(), UserGameCommand.class);
+                    player = dataAccess.getAuthData(leaveCommand.getAuthToken()).username();
+                    leave(player, ctx.session);
+                    break;
+            }
+        } catch (NullPointerException ex){
+            ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                    "Invalid Authentication Data.");
+            connections.sendMessage(message, ctx.session);
         }
     }
 
@@ -106,7 +112,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             GameMessage gameMessage = new GameMessage(ServerMessage.ServerMessageType.LOAD_GAME,
                     dataAccess.getGame(gameID).getGame());
             connections.sendMessage(gameMessage, session);
-
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     player + " made the move " + move + ".");
             connections.broadcastMessage(message, List.of(new Session[]{session}));
