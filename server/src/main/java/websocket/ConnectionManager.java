@@ -24,7 +24,7 @@ public class ConnectionManager {
     public void broadcastMessage(ServerMessage serverMessage, Collection<Session> excludedSessions) throws IOException {
         for (Session session : connections.values()){
             if (!excludedSessions.contains(session) && session.isOpen()){
-                session.getRemote().sendString(serverMessage.getMessage());
+                session.getRemote().sendString(new Gson().toJson(serverMessage));
             }
         }
     }
