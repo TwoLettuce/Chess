@@ -10,13 +10,13 @@ import websocket.commands.MoveCommand;
 import websocket.commands.UserGameCommand;
 import dataaccess.DataAccess;
 import org.eclipse.jetty.websocket.api.Session;
+import websocket.messages.ErrorMessage;
 import websocket.messages.GameMessage;
 import websocket.messages.ServerMessage;
 
 import java.io.IOException;
 
 import java.util.List;
-import java.util.Map;
 
 public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler {
     private final Gson serializer = new Gson();
@@ -78,16 +78,23 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     private void connect(int gameID, String color, String player, Session session) throws IOException, DataAccessException {
-        GameMessage gameMessage = new GameMessage(ServerMessage.ServerMessageType.LOAD_GAME,
-                dataAccess.getGame(gameID).getGame());
-        connections.add(session);
-        connections.sendMessage(gameMessage, session);
+        try {
+            GameMessage gameMessage = new GameMessage(ServerMessage.ServerMessageType.LOAD_GAME,
+                    dataAccess.getGame(gameID).getGame());
+            connections.add(session);
+            connections.sendMessage(gameMessage, session);
+        } catch (NullPointerException ex){
+            ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                    "Invalid game ID.");
+            connections.sendMessage(message, session);
+        }
+
         try {
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     player + " has joined the game.");
             connections.broadcastMessage(message, List.of(session));
         } catch (IOException ex){
-            ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR,
+            ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
                     "Server Error.");
             connections.sendMessage(message, session);
         }
