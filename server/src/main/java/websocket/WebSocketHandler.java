@@ -154,11 +154,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     private void resign(String player, Session session){
-        connections.remove(session);
         try {
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     player + " has resigned.");
-            connections.broadcastMessage(message, List.of(new Session[]{session}));
+            connections.broadcastMessage(message, List.of(new Session[]{}));
         } catch (IOException ex){
             ex.printStackTrace();
         }
