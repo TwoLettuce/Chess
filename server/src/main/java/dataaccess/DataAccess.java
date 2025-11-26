@@ -1,5 +1,6 @@
 package dataaccess;
 
+import chess.ChessGame;
 import datamodel.AuthData;
 import datamodel.GameData;
 import datamodel.UserData;
@@ -17,4 +18,5 @@ public interface DataAccess {
     void addUserToGame(String authToken, String playerColor, int gameID) throws DataAccessException;
     AuthData getAuthData(String authToken) throws DataAccessException;
     GameData getGame(int gameID) throws DataAccessException;
+    void updateGame(int gameID, ChessGame updatedGame) throws ServerConnectionInterruptException;
 }

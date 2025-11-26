@@ -191,6 +191,19 @@ public class MySQLDataAccess implements DataAccess {
         }
     }
 
+    @Override
+    public void updateGame(int gameID, ChessGame updatedGame) throws ServerConnectionInterruptException {
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement("UPDATE games SET chessGame = ? WHERE gameID = ?")) {
+                preparedStatement.setString(1, serializeChessGame(updatedGame));
+                preparedStatement.setInt(2, gameID);
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException | DataAccessException ex) {
+            throw new ServerConnectionInterruptException("Error: couldn't connect");
+        }
+    }
+
     String[] tables = {
             """
             CREATE TABLE IF NOT EXISTS users (

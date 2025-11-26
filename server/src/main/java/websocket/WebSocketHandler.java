@@ -1,7 +1,11 @@
 package websocket;
 
+import chess.ChessGame;
+import chess.ChessMove;
+import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
+import datamodel.GameData;
 import io.javalin.websocket.*;
 import jakarta.websocket.OnMessage;
 import org.jetbrains.annotations.NotNull;
@@ -56,7 +60,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 case MAKE_MOVE:
                     MoveCommand moveCommand = serializer.fromJson(ctx.message(), MoveCommand.class);
                     player = dataAccess.getAuthData(moveCommand.getAuthToken()).username();
-                    String move = moveCommand.getMove();
+                    ChessMove move = moveCommand.getMove();
                     gameID = moveCommand.getGameID();
                     makeMove(player, move, gameID, ctx.session);
                     break;
@@ -107,16 +111,27 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
 
-    private void makeMove(String player, String move, int gameID, Session session) throws IOException {
+    private void makeMove(String player, ChessMove move, int gameID, Session session) throws IOException {
         try {
+            GameData gameData = dataAccess.getGame(gameID);
+            try {
+                gameData.getGame().makeMove(move);
+                dataAccess.updateGame(gameID, gameData.getGame());
+            }
+            catch (InvalidMoveException e) {
+                ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                        "Invalid move.");
+                connections.sendMessage(message, session);
+                return;
+            }
             GameMessage gameMessage = new GameMessage(ServerMessage.ServerMessageType.LOAD_GAME,
-                    dataAccess.getGame(gameID).getGame());
-            connections.sendMessage(gameMessage, session);
+                    gameData.getGame());
+            connections.broadcastMessage(gameMessage, List.of());
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     player + " made the move " + move + ".");
             connections.broadcastMessage(message, List.of(new Session[]{session}));
         } catch (IOException | DataAccessException ex){
-            ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR,
+            ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
                     "Server Error.");
             connections.sendMessage(message, session);
         }
