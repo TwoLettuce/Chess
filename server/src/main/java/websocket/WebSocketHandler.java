@@ -78,8 +78,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     private void connect(int gameID, String color, String player, Session session) throws IOException, DataAccessException {
-        ServerMessage gameMessage = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME,
-                dataAccess.getGame(gameID).getGame().toString());
+        GameMessage gameMessage = new GameMessage(ServerMessage.ServerMessageType.LOAD_GAME,
+                dataAccess.getGame(gameID).getGame());
         connections.add(session);
         connections.sendMessage(gameMessage, session);
         try {
