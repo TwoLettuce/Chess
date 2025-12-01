@@ -3,7 +3,6 @@ package chess;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * For a class that can manage a chess game, making moves on a board
@@ -20,6 +19,11 @@ public class ChessGame {
     
     public ChessGame() {
         board.resetBoard();
+        gameOver = false;
+    }
+    public ChessGame(TeamColor currentTurn, ChessBoard board){
+        this.currentTurn = currentTurn;
+        this.board = board;
         gameOver = false;
     }
     public ChessGame(TeamColor currentTurn, ChessBoard board, boolean gameOver){
@@ -42,7 +46,6 @@ public class ChessGame {
      */
     public void setTeamTurn(TeamColor team) {
         currentTurn = team;
-
     }
 
     private void flipTeamTurn(){
@@ -52,6 +55,10 @@ public class ChessGame {
 
     public boolean isGameOver() {
         return gameOver;
+    }
+
+    public void setGameOver(boolean gameOver){
+        this.gameOver = gameOver;
     }
 
     /**
@@ -177,6 +184,9 @@ public class ChessGame {
      */
 
     public void makeMove(ChessMove move) throws InvalidMoveException {
+        if (gameOver){
+            throw new InvalidMoveException("Game is over!");
+        }
         ChessBoard willBePreviousBoard = new ChessBoard(board);
         tryMove(move);
         if(board.getPiece(move.getEndPosition()).getTeamColor() != getTeamTurn()) {
@@ -335,12 +345,6 @@ public class ChessGame {
         return false;
     }
 
-    /**
-     * Determines if the given team is in checkmate
-     *
-     * @param teamColor which team to check for checkmate
-     * @return True if the specified team is in checkmate
-     */
     public boolean isInCheckmate(TeamColor teamColor) {
         for (int row = 1; row <=8; row++){
             for (int col = 1; col <=8; col++){
@@ -465,7 +469,6 @@ public class ChessGame {
         if (kingPos == null) {throw new Exception("there's no king on the board?");}
         return kingPos;
     }
-
     /**
      * Sets this game's chessboard with a given board
      *
@@ -483,8 +486,6 @@ public class ChessGame {
     public ChessBoard getBoard() {
         return board;
     }
-
-
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) {
@@ -493,7 +494,6 @@ public class ChessGame {
         ChessGame chessGame = (ChessGame) o;
         return currentTurn == chessGame.currentTurn && Objects.equals(board, chessGame.board);
     }
-
     @Override
     public int hashCode() {
         return Objects.hash(currentTurn, board);

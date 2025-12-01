@@ -68,7 +68,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 case RESIGN:
                     UserGameCommand resignCommand = serializer.fromJson(ctx.message(), UserGameCommand.class);
                     player = dataAccess.getAuthData(resignCommand.getAuthToken()).username();
-                    resign(player, ctx.session);
+                    resign(player, gameID, ctx.session);
                     break;
                 case LEAVE:
                     UserGameCommand leaveCommand = serializer.fromJson(ctx.message(), UserGameCommand.class);
@@ -187,13 +187,18 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
     }
 
-    private void resign(String player, Session session){
+    private void resign(String player, int gameID, Session session){
         try {
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     player + " has resigned.");
             connections.broadcastMessage(message, List.of(new Session[]{}));
+            GameData gameData = dataAccess.getGame(gameID);
+            gameData.getGame().setGameOver(true);
+            dataAccess.updateGame(gameID, gameData.getGame());
         } catch (IOException ex){
             ex.printStackTrace();
+        } catch (DataAccessException e) {
+            throw new RuntimeException("bad gameID");
         }
     }
 
