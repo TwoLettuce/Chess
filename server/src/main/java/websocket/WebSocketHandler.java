@@ -68,6 +68,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 case RESIGN:
                     UserGameCommand resignCommand = serializer.fromJson(ctx.message(), UserGameCommand.class);
                     player = dataAccess.getAuthData(resignCommand.getAuthToken()).username();
+                    gameID = resignCommand.getGameID();
                     resign(player, gameID, ctx.session);
                     break;
                 case LEAVE:
@@ -119,13 +120,13 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         try {
             GameData gameData = dataAccess.getGame(gameID);
             try {
-                validateThisPlayerCanMove(gameData, player);
+                validateIsPlayer(gameData, player);
                 gameData.getGame().makeMove(move);
                 dataAccess.updateGame(gameID, gameData.getGame());
             }
             catch (InvalidMoveException e) {
                 ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
-                        "Invalid move.");
+                        "Got Error Message: " + e.getMessage());
                 connections.sendMessage(message, session);
                 return;
             }
@@ -173,7 +174,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     }
 
-    private void validateThisPlayerCanMove(GameData gameData, String player) throws InvalidMoveException {
+    private void validateIsPlayer(GameData gameData, String player) throws InvalidMoveException {
         if (Objects.equals(player, gameData.getWhiteUsername())){
             if (gameData.getGame().getTeamTurn() != ChessGame.TeamColor.WHITE){
                 throw new InvalidMoveException("Not your turn!");
@@ -187,18 +188,25 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
     }
 
-    private void resign(String player, int gameID, Session session){
+    private void resign(String player, int gameID, Session session) throws IOException {
         try {
+            GameData gameData = dataAccess.getGame(gameID);
+            validateIsPlayer(gameData, player);
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     player + " has resigned.");
             connections.broadcastMessage(message, List.of(new Session[]{}));
-            GameData gameData = dataAccess.getGame(gameID);
             gameData.getGame().setGameOver(true);
             dataAccess.updateGame(gameID, gameData.getGame());
         } catch (IOException ex){
             ex.printStackTrace();
         } catch (DataAccessException e) {
-            throw new RuntimeException("bad gameID");
+            ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                    "Invalid game ID.");
+            connections.sendMessage(message, session);
+        } catch (InvalidMoveException e) {
+            ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                    e.getMessage());
+            connections.sendMessage(message, session);
         }
     }
 
