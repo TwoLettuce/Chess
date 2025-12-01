@@ -1,6 +1,5 @@
 package client;
 
-import com.sun.nio.sctp.AbstractNotificationHandler;
 import datamodels.GameData;
 import serverfacade.GameDataList;
 import serverfacade.ServerFacade;

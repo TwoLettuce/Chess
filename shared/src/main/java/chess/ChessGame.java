@@ -13,17 +13,19 @@ import java.util.Set;
  */
 public class ChessGame {
 
-
     TeamColor currentTurn = TeamColor.WHITE;
     ChessBoard board = new ChessBoard();
     ChessBoard previousBoard;
+    private boolean gameOver;
     
     public ChessGame() {
         board.resetBoard();
+        gameOver = false;
     }
-    public ChessGame(TeamColor currentTurn, ChessBoard board){
+    public ChessGame(TeamColor currentTurn, ChessBoard board, boolean gameOver){
         this.currentTurn = currentTurn;
         this.board = board;
+        this.gameOver = gameOver;
     }
 
     /**
@@ -46,6 +48,10 @@ public class ChessGame {
     private void flipTeamTurn(){
         if (currentTurn == TeamColor.BLACK) { currentTurn = TeamColor.WHITE; }
         else { currentTurn = TeamColor.BLACK; }
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
     }
 
     /**
@@ -345,6 +351,7 @@ public class ChessGame {
                 }
             }
         }
+        gameOver = true;
         return true;
     }
 
@@ -365,6 +372,7 @@ public class ChessGame {
                 }
             }
         }
+        gameOver = true;
         return true;
     }
 

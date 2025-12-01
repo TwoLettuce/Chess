@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConnectionManager {
 
     ConcurrentHashMap<Session, Session> connections = new ConcurrentHashMap<>();
+    boolean gameIsPlayable;
 
 
     public void add(Session session){
@@ -19,6 +20,10 @@ public class ConnectionManager {
 
     public void remove(Session session){
         connections.remove(session);
+    }
+
+    public boolean contains(Session session){
+        return connections.contains(session);
     }
 
     public void broadcastMessage(ServerMessage serverMessage, Collection<Session> excludedSessions) throws IOException {

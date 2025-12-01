@@ -90,6 +90,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void connect(int gameID, String color, String player, Session session) throws IOException, DataAccessException {
         try {
+            if (connections.contains(session)){
+                connections.remove(session);
+            }
             GameMessage gameMessage = new GameMessage(ServerMessage.ServerMessageType.LOAD_GAME,
                     dataAccess.getGame(gameID).getGame());
             connections.add(session);
@@ -132,11 +135,42 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     player + " made the move " + move + ".");
             connections.broadcastMessage(message, List.of(new Session[]{session}));
+            broadcastBoardState(gameData);
         } catch (IOException | DataAccessException ex){
             ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
                     "Server Error.");
             connections.sendMessage(message, session);
         }
+    }
+
+    private void broadcastBoardState(GameData gameData) throws IOException {
+        ServerMessage message = null;
+        if (gameData.getGame().isInCheck(ChessGame.TeamColor.WHITE)){
+             message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
+                     gameData.getWhiteUsername() + " (white) is in check!");
+             connections.broadcastMessage(message, List.of());
+
+        } else if (gameData.getGame().isInCheck(ChessGame.TeamColor.BLACK)){
+            message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
+                    gameData.getBlackUsername() + " (black) is in check!");
+            connections.broadcastMessage(message, List.of());
+
+        } else if (gameData.getGame().isInCheckmate(ChessGame.TeamColor.WHITE)){
+            message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
+                    gameData.getWhiteUsername() + " (white) is in checkmate! Black wins!");
+            connections.broadcastMessage(message, List.of());
+
+        } else if (gameData.getGame().isInCheckmate(ChessGame.TeamColor.BLACK)){
+            message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
+                    gameData.getBlackUsername() + " (black) is in checkmate! Black wins");
+            connections.broadcastMessage(message, List.of());
+
+        } else if (gameData.getGame().isInStalemate(gameData.getGame().getTeamTurn())){
+            message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
+                    gameData.getGame().getTeamTurn() + " can't make any moves. Stalemate!");
+            connections.broadcastMessage(message, List.of());
+        }
+
     }
 
     private void validateThisPlayerCanMove(GameData gameData, String player) throws InvalidMoveException {
