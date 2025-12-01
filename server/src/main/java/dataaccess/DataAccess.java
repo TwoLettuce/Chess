@@ -19,4 +19,5 @@ public interface DataAccess {
     AuthData getAuthData(String authToken) throws DataAccessException;
     GameData getGame(int gameID) throws DataAccessException;
     void updateGame(int gameID, ChessGame updatedGame) throws ServerConnectionInterruptException;
+    void removeUserFromGame(String color, int gameID) throws DataAccessException;
 }

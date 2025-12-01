@@ -204,6 +204,26 @@ public class MySQLDataAccess implements DataAccess {
         }
     }
 
+    @Override
+    public void removeUserFromGame(String color, int gameID) throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()) {
+            String userColor;
+            if (Objects.equals(color, "WHITE")){
+                userColor = "whiteUsername";
+            } else {
+                userColor = "blackUsername";
+            }
+            try (var preparedStatement = conn.prepareStatement("UPDATE games SET " + userColor + " = ? WHERE gameID = ?")){
+                preparedStatement.setString(1, null);
+                preparedStatement.setInt(2, gameID);
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException ex) {
+            throw new ServerConnectionInterruptException("Error: connection interrupted");
+
+        }
+    }
+
     String[] tables = {
             """
             CREATE TABLE IF NOT EXISTS users (

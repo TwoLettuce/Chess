@@ -40,6 +40,16 @@ public class MemoryDataAccess implements DataAccess {
     }
 
     @Override
+    public void removeUserFromGame(String color, int gameID) throws DataAccessException {
+        GameData gameData = games.get(gameID);
+        if (Objects.equals("WHITE", color)){
+            gameData.setWhiteUsername(null);
+        } else {
+            gameData.setBlackUsername(null);
+        }
+    }
+
+    @Override
     public void addUser(UserData userData) throws DataAccessException {
         users.put(userData.username(), userData);
     }

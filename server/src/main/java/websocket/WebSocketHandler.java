@@ -56,7 +56,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                     player = dataAccess.getAuthData(connectCommand.getAuthToken()).username();
                     gameID = connectCommand.getGameID();
                     String color = connectCommand.getColor();
-                    connect(gameID, color, player, ctx.session);
+                    connect(gameID, color, player, connectCommand.getAuthToken(), ctx.session);
                     break;
                 case MAKE_MOVE:
                     MoveCommand moveCommand = serializer.fromJson(ctx.message(), MoveCommand.class);
@@ -74,7 +74,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 case LEAVE:
                     UserGameCommand leaveCommand = serializer.fromJson(ctx.message(), UserGameCommand.class);
                     player = dataAccess.getAuthData(leaveCommand.getAuthToken()).username();
-                    leave(player, ctx.session);
+                    gameID = leaveCommand.getGameID();
+                    leave(player, gameID, leaveCommand.getAuthToken(), ctx.session);
                     break;
             }
         } catch (NullPointerException ex){
@@ -89,7 +90,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         System.out.println("Websocket connection closed successfully");
     }
 
-    private void connect(int gameID, String color, String player, Session session) throws IOException, DataAccessException {
+    private void connect(int gameID, String color, String player, String authToken, Session session) throws IOException, DataAccessException {
         try {
             if (connections.contains(session)){
                 connections.remove(session);
@@ -220,14 +221,34 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
     }
 
-    private void leave(String player, Session session){
+    private void leave(String player, int gameID, String authToken, Session session) throws IOException {
         connections.remove(session);
         try {
+            GameData gameData = dataAccess.getGame(gameID);
+            String color = determinePlayerColor(gameData, dataAccess.getAuthData(authToken).username());
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
-                    player + " has left the game.");
+                    player + " (" + color + ") has left the game.");
             connections.broadcastMessage(message, List.of(new Session[]{session}));
+            if (color == "OBSERVER"){
+                return;
+            }
+            dataAccess.removeUserFromGame(color, gameID);
         } catch (IOException ex){
             ex.printStackTrace();
+        } catch (DataAccessException e) {
+            ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                    "Invalid game!");
+            connections.sendMessage(message, session);
+        }
+    }
+
+    private String determinePlayerColor(GameData gameData, String username) {
+        if (Objects.equals(gameData.getWhiteUsername(), username)){
+            return "WHITE";
+        } else if (Objects.equals(gameData.getBlackUsername(), username)){
+            return "BLACK";
+        } else {
+            return "OBSERVER";
         }
     }
 
