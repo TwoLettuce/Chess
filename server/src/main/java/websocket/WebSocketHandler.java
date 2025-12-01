@@ -195,6 +195,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         try {
             GameData gameData = dataAccess.getGame(gameID);
             validateIsNotObserver(gameData, player);
+            if (gameData.getGame().isGameOver()){
+                throw new IOException("Game is already over!");
+            }
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     player + " has resigned.");
             connections.broadcastMessage(message, List.of(new Session[]{}));
