@@ -122,6 +122,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             try {
                 validateIsPlayer(gameData, player);
                 gameData.getGame().makeMove(move);
+                if (gameData.getGame().isGameOver()){
+                    throw new DataAccessException("Game Over!");
+                }
                 dataAccess.updateGame(gameID, gameData.getGame());
             }
             catch (InvalidMoveException e) {
@@ -191,22 +194,26 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private void resign(String player, int gameID, Session session) throws IOException {
         try {
             GameData gameData = dataAccess.getGame(gameID);
-            validateIsPlayer(gameData, player);
+            validateIsNotObserver(gameData, player);
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     player + " has resigned.");
             connections.broadcastMessage(message, List.of(new Session[]{}));
             gameData.getGame().setGameOver(true);
             dataAccess.updateGame(gameID, gameData.getGame());
-        } catch (IOException ex){
-            ex.printStackTrace();
         } catch (DataAccessException e) {
             ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
                     "Invalid game ID.");
             connections.sendMessage(message, session);
-        } catch (InvalidMoveException e) {
+        } catch (IOException e) {
             ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
                     e.getMessage());
             connections.sendMessage(message, session);
+        }
+    }
+
+    private void validateIsNotObserver(GameData gameData, String player) throws IOException {
+        if (!Objects.equals(player, gameData.getBlackUsername()) && !Objects.equals(player, gameData.getWhiteUsername())){
+            throw new IOException("Observers can't resign!");
         }
     }
 
