@@ -61,9 +61,6 @@ public class ChessGame {
         this.gameOver = gameOver;
     }
 
-    /**
-     * Enum identifying the 2 possible teams in a chess game
-     */
     public enum TeamColor {
         WHITE,
         BLACK
@@ -86,7 +83,7 @@ public class ChessGame {
                     goodMoves.add(move);
                 }
                 board = new ChessBoard(currentBoard);
-            } catch(InvalidMoveException ex) {
+            } catch (InvalidMoveException ex) {
                 board = new ChessBoard(currentBoard);
             }
         }

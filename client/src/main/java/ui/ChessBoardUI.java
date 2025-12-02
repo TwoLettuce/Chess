@@ -1,10 +1,7 @@
 package ui;
-import chess.ChessBoard;
-import chess.ChessGame;
-import chess.ChessPiece;
-import chess.ChessPosition;
+import chess.*;
 
-import java.util.Objects;
+import java.util.ArrayList;
 
 /**
  * this class has a draw(ChessBoard board, boolean) method that will draw the given chess board.
@@ -52,6 +49,64 @@ public class ChessBoardUI {
     }
 
 
+    public void highlight(ChessGame game, boolean isBlack, ChessPosition pos){
+        boolean throwsNullPointerException = game.getBoard().getPiece(pos).hasMoved;
+        this.board = game.getBoard();
+        printHeader(isBlack);
+        printRowsWithHighlight(game, isBlack, pos);
+        printHeader(isBlack);
+    }
+
+    private void printRowsWithHighlight(ChessGame game, boolean isBlack, ChessPosition pos) {
+        int[] rowHeader;
+        if (isBlack){
+            rowHeader = REVERSE_ROW_HEADER;
+        } else {
+            rowHeader = ROW_HEADER;
+        }
+        boolean whiteSquare = true;
+        var validMoves = game.validMoves(pos);
+        ArrayList<ChessPosition> validDestinations = new ArrayList<>();
+        for (ChessMove move : validMoves){
+            validDestinations.add(move.getEndPosition());
+        }
+        for (int row : rowHeader){
+            StringBuilder thisRow = new StringBuilder();
+            thisRow.append(EscapeSequences.SET_BG_COLOR_RED);
+            thisRow.append("\u2003").append(row).append(" ");
+            int[] cols;
+            if (isBlack){
+                cols = ROW_HEADER;
+            } else {
+                cols = REVERSE_ROW_HEADER;
+            }
+            for (int col : cols) {
+                if (whiteSquare){
+                    if (validDestinations.contains(new ChessPosition(row, col))){
+                        thisRow.append(EscapeSequences.SET_BG_COLOR_LIGHT_BLUE);
+                    } else {
+                        thisRow.append(EscapeSequences.SET_BG_COLOR_WHITE);
+                    }
+                } else {
+                    if (validDestinations.contains(new ChessPosition(row, col))){
+                        thisRow.append(EscapeSequences.SET_BG_COLOR_BLUE);
+                    } else {
+                        thisRow.append(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
+                    }
+                }
+                String piece = translateToANSI(game.getBoard().getPiece(new ChessPosition(row, col)), whiteSquare);
+                thisRow.append(piece);
+                thisRow.append(EscapeSequences.SET_TEXT_COLOR_BLACK);
+                whiteSquare = !whiteSquare;
+            }
+            whiteSquare = !whiteSquare;
+            thisRow.append(EscapeSequences.SET_BG_COLOR_RED);
+            thisRow.append(" ").append(row).append("\u2003");
+            thisRow.append(EscapeSequences.RESET_BG_COLOR);
+            System.out.println(thisRow);
+        }
+    }
+
     private void printRows(boolean isBlack){
         int[] rowHeader;
         if (isBlack){
@@ -92,7 +147,7 @@ public class ChessBoardUI {
 
     private String translateToANSI(ChessPiece piece, boolean whiteSquare) {
         if (piece == null) {
-            return makeEmpty(whiteSquare);
+            return EscapeSequences.EMPTY;
         }
         if (piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
             return switch (piece.getPieceType()) {
@@ -113,12 +168,5 @@ public class ChessBoardUI {
                 case KING -> EscapeSequences.BLACK_KING;
             };
         }
-    }
-
-    private String makeEmpty(boolean whiteSquare) {
-        if (whiteSquare){
-            return EscapeSequences.SET_TEXT_COLOR_WHITE + EscapeSequences.WHITE_PAWN;
-        }
-        return EscapeSequences.SET_TEXT_COLOR_LIGHT_GREY + EscapeSequences.WHITE_PAWN;
     }
 }

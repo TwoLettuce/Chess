@@ -1,5 +1,6 @@
 package client;
 
+import chess.ChessPosition;
 import datamodels.GameData;
 import serverfacade.GameDataList;
 import serverfacade.ServerFacade;
@@ -207,16 +208,15 @@ public class ChessClient implements ServerMessageHandler {
         }
     }
 
-    private void enterGameRepl(boolean joinedAsBlack, int gameIndex) {
+    private void enterGameRepl(boolean isBlack, int gameIndex) {
         GameData gameData = gameDataList.get(gameIndex);
-        if (joinedAsBlack){
+        if (isBlack){
             gameData.setBlackUsername(username);
         } else {
             gameData.setWhiteUsername(username);
         }
         Scanner scanner = new Scanner(System.in);
-        printSadStatus();
-        drawer.draw(gameDataList.get(gameIndex).getGame().getBoard(), joinedAsBlack);
+        drawer.draw(gameDataList.get(gameIndex).getGame().getBoard(), isBlack);
         System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE);
         System.out.println("White player: " + gameData.getWhiteUsername());
         System.out.print(EscapeSequences.SET_TEXT_COLOR_LIGHT_GREY);
@@ -224,23 +224,46 @@ public class ChessClient implements ServerMessageHandler {
 
         while (true) {
             System.out.print(EscapeSequences.SET_TEXT_COLOR_MAGENTA + playingStatus + " >> ");
-            String input = scanner.nextLine();
-            if (Objects.equals(input, "quit")){
-                System.out.println("Returning to main menu . . .");
+            String[] command = scanner.nextLine().split(" ");
+            switch (command[0]){
+                case "leave":
+                    checkArgs(command, command[0], 0);
+                    System.out.println("Returning to main menu . . .");
+                    break;
+                case "help":
+                    checkArgs(command, command[0], 0);
+                    System.out.println(EscapeSequences.SET_TEXT_COLOR_YELLOW + """
+                        Commands and usages:
+                        help - display commands
+                        highlight <position> - highlights legal moves the piece at "position" can make
+                        redraw - redraw the board
+                        move <position1> <position2> - move the piece at position1 to position2, (i.e. [e4 e5], [a1 c1]
+                        Note: To castle, use the start and end position of the king, not the rook.
+                        resign - concede defeat
+                        leave - exit the game
+                        """);
+                    break;
+                case "highlight", "h":
+                    checkArgs(command, "highlight", 1);
+                    ChessPosition position = parsePosition(command[1]);
+                    try {
+                        drawer.highlight(gameData.getGame(), isBlack, position);
+                    } catch (NullPointerException ex) {
+                        System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "There's no piece there!");
+                    }
+                    break;
+                case "redraw":
+                    checkArgs(command, command[0], 0);
+                    drawer.draw(gameData.getGame().getBoard(), isBlack);
+                    break;
+                default:
+                    System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid command. Use 'help' for available commands.");
+                    break;
+            }
+            if (Objects.equals(command[0], "leave")){
                 break;
-            } else if (Objects.equals(input, "help")) {
-                System.out.println(EscapeSequences.SET_TEXT_COLOR_YELLOW + "Commands and usages: \nquit - return to menu");
-            } else {
-                System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Sorry! This part of the game hasn't been implemented yet!");
             }
         }
-    }
-
-    private void printSadStatus() {
-        System.out.println(EscapeSequences.SET_TEXT_COLOR_YELLOW + """
-                Sorry! The developers haven't gotten this far yet!
-                Use 'quit' to return to the main menu.
-                Here's the board and the players that have joined so far:""");
     }
 
     private void list(String[] args) {
@@ -387,6 +410,24 @@ public class ChessClient implements ServerMessageHandler {
             return true;
         }
         return false;
+    }
+
+    private ChessPosition parsePosition(String positionAsString){
+        char colChar = positionAsString.charAt(0);
+        int row = positionAsString.charAt(1) - '0';
+        int col;
+        switch (colChar){
+            case 'a' -> col = 1;
+            case 'b' -> col = 2;
+            case 'c' -> col = 3;
+            case 'd' -> col = 4;
+            case 'e' -> col = 5;
+            case 'f' -> col = 6;
+            case 'g' -> col = 7;
+            case 'h' -> col = 8;
+            default -> col = -1;
+        }
+        return new ChessPosition(row, col);
     }
 
     @Override
