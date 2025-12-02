@@ -60,6 +60,7 @@ public class GameDataTypeAdapter extends TypeAdapter<GameData> {
         ChessGame.TeamColor currentTurn = null;
         boolean gameOver = false;
         ChessBoard board = null;
+        ChessBoard previousBoard = null;
 
         jsonReader.beginObject();
         while (jsonReader.hasNext()){
@@ -68,13 +69,14 @@ public class GameDataTypeAdapter extends TypeAdapter<GameData> {
                 currentTurn = ChessGame.TeamColor.valueOf(jsonReader.nextString());
             } else if (Objects.equals(identifier, "gameOver")){
                 gameOver = jsonReader.nextBoolean();
-            }
-            else if (Objects.equals(identifier, "board")){
+            } else if (Objects.equals(identifier, "previousBoard")){
+                previousBoard = buildBoard(jsonReader);
+            } else if (Objects.equals(identifier, "board")){
                 board = buildBoard(jsonReader);
             }
         }
         jsonReader.endObject();
-        return new ChessGame(currentTurn, board, gameOver);
+        return new ChessGame(currentTurn, board, previousBoard, gameOver);
     }
 
     private ChessBoard buildBoard(JsonReader jsonReader) throws IOException {

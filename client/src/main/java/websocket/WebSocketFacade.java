@@ -2,7 +2,6 @@ package websocket;
 
 import chess.ChessMove;
 import com.google.gson.Gson;
-import dataaccess.DataAccessException;
 import jakarta.websocket.*;
 import websocket.commands.ConnectCommand;
 import websocket.commands.MoveCommand;

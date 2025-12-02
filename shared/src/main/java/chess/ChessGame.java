@@ -32,6 +32,12 @@ public class ChessGame {
         this.gameOver = gameOver;
     }
 
+    public ChessGame(TeamColor currentTurn, ChessBoard board, ChessBoard previousBoard, boolean gameOver){
+        this.currentTurn = currentTurn;
+        this.board = board;
+        this.gameOver = gameOver;
+    }
+
     /**
      * @return Which team's turn it is
      */
@@ -472,6 +478,7 @@ public class ChessGame {
      * @param board the new board to use
      */
     public void setBoard(ChessBoard board) {
+        previousBoard = this.board;
         this.board = board;
     }
 

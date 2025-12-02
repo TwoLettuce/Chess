@@ -1,6 +1,9 @@
 package client;
 
+import chess.ChessMove;
+import chess.ChessPiece;
 import chess.ChessPosition;
+import chess.InvalidMoveException;
 import datamodels.GameData;
 import serverfacade.GameDataList;
 import serverfacade.ServerFacade;
@@ -13,6 +16,7 @@ import ui.ChessBoardUI;
 import ui.EscapeSequences;
 import websocket.ServerMessageHandler;
 import websocket.WebSocketFacade;
+import websocket.messages.GameMessage;
 import websocket.messages.ServerMessage;
 
 public class ChessClient implements ServerMessageHandler {
@@ -25,6 +29,8 @@ public class ChessClient implements ServerMessageHandler {
     String username;
     String authToken = "";
     boolean loggedIn = false;
+    boolean isBlack;
+    int currentGameIndex;
     GameDataList gameDataList = new GameDataList();
 
 
@@ -152,6 +158,8 @@ public class ChessClient implements ServerMessageHandler {
         boolean joinedAsBlack = !Objects.equals(args[1], "WHITE");
 
         if (args[1].equals("OBSERVER")) {
+            webSocket.connectToGame(authToken, gameID, args[1]);
+            currentGameIndex = gameIndex;
             observerRepl(gameDataList.get(gameIndex));
         } else if (!args[1].equals("WHITE") && !args[1].equals("BLACK")){
             System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Expected 'white', 'black', or 'observer' as 1st argument, but got " + args[1]);
@@ -171,6 +179,7 @@ public class ChessClient implements ServerMessageHandler {
             }
             return;
         }
+        isBlack = joinedAsBlack;
         playingStatus = "[Playing in game '" + gameDataList.get(gameIndex).getGameName() + "' as " + args[1] + "]";
         enterGameRepl(joinedAsBlack, gameIndex);
 
@@ -226,10 +235,6 @@ public class ChessClient implements ServerMessageHandler {
             System.out.print(EscapeSequences.SET_TEXT_COLOR_MAGENTA + playingStatus + " >> ");
             String[] command = scanner.nextLine().split(" ");
             switch (command[0]){
-                case "leave":
-                    checkArgs(command, command[0], 0);
-                    System.out.println("Returning to main menu . . .");
-                    break;
                 case "help":
                     checkArgs(command, command[0], 0);
                     System.out.println(EscapeSequences.SET_TEXT_COLOR_YELLOW + """
@@ -244,7 +249,7 @@ public class ChessClient implements ServerMessageHandler {
                         """);
                     break;
                 case "highlight", "h":
-                    checkArgs(command, "highlight", 1);
+                    if (checkArgs(command, "highlight", 1)){break;}
                     ChessPosition position = parsePosition(command[1]);
                     try {
                         drawer.highlight(gameData.getGame(), isBlack, position);
@@ -253,8 +258,33 @@ public class ChessClient implements ServerMessageHandler {
                     }
                     break;
                 case "redraw":
-                    checkArgs(command, command[0], 0);
+                    if (checkArgs(command, command[0], 0)){break;}
                     drawer.draw(gameData.getGame().getBoard(), isBlack);
+                    break;
+                case "move":
+                    if (checkArgs(command, command[0], 2)){
+                        if (checkArgs(command, command[0], 3)){
+                            break;
+                        }
+                    }
+                    ChessPiece.PieceType promotionPiece;
+                    try {
+                        promotionPiece = convertToPromotionPiece(command[3]);
+                    } catch (ArrayIndexOutOfBoundsException ex){
+                        promotionPiece = null;
+                    } catch (InvalidMoveException ex) {
+                        System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid promotion piece!");
+                        break;
+                    }
+                    ChessPosition startPos = parsePosition(command[1]);
+                    ChessPosition endPos = parsePosition(command[2]);
+                    ChessMove move = new ChessMove(startPos, endPos, promotionPiece);
+                    webSocket.makeMove(authToken, gameIndex, move);
+                    break;
+                case "leave":
+                    checkArgs(command, command[0], 0);
+                    webSocket.leaveGame(authToken, gameIndex);
+                    System.out.println("Returning to main menu . . .");
                     break;
                 default:
                     System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid command. Use 'help' for available commands.");
@@ -263,6 +293,17 @@ public class ChessClient implements ServerMessageHandler {
             if (Objects.equals(command[0], "leave")){
                 break;
             }
+        }
+    }
+
+    private ChessPiece.PieceType convertToPromotionPiece(String s) throws InvalidMoveException {
+        s = s.toUpperCase();
+        switch (s) {
+            case "QUEEN" -> {return ChessPiece.PieceType.QUEEN;}
+            case "BISHOP" -> {return ChessPiece.PieceType.BISHOP;}
+            case "KNIGHT" -> {return ChessPiece.PieceType.KNIGHT;}
+            case "ROOK" -> {return ChessPiece.PieceType.ROOK;}
+            default -> throw new InvalidMoveException();
         }
     }
 
@@ -432,6 +473,15 @@ public class ChessClient implements ServerMessageHandler {
 
     @Override
     public void notify(ServerMessage serverMessage) {
-        System.out.println(EscapeSequences.SET_TEXT_COLOR_WHITE + serverMessage.getMessage());
+        switch (serverMessage.getServerMessageType()){
+            case LOAD_GAME -> {
+                GameMessage gameMessage = (GameMessage) serverMessage;
+                gameDataList.get(currentGameIndex).getGame().setBoard(gameMessage.getGame().getBoard());
+                drawer.draw(gameMessage.getGame().getBoard(), isBlack);
+            }
+            case NOTIFICATION -> System.out.println(EscapeSequences.SET_TEXT_COLOR_WHITE + serverMessage.getMessage());
+            case ERROR -> System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + serverMessage.getMessage());
+        }
+
     }
 }
