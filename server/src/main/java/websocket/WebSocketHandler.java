@@ -8,6 +8,7 @@ import dataaccess.DataAccessException;
 import datamodel.GameData;
 import io.javalin.websocket.*;
 import jakarta.websocket.OnMessage;
+import jakarta.websocket.OnOpen;
 import org.jetbrains.annotations.NotNull;
 import websocket.commands.ConnectCommand;
 import websocket.commands.MoveCommand;
@@ -20,16 +21,40 @@ import websocket.messages.ServerMessage;
 
 import java.io.IOException;
 
+import java.nio.ByteBuffer;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler {
     private final Gson serializer = new Gson();
     private final ConnectionManager connections = new ConnectionManager();
     private final DataAccess dataAccess;
+    private Timer pong;
 
     public WebSocketHandler(DataAccess dataAccess){
         this.dataAccess = dataAccess;
+    }
+
+
+    @OnOpen
+    public void onOpen(Session session) {
+        session.setIdleTimeout(Duration.ofDays(0));
+        pong = new Timer(true);
+        pong.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (session.isOpen()) {
+                    try {
+                        session.getRemote().sendPing(ByteBuffer.wrap(new byte[]{1}));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }, 25000, 25000);
     }
 
     @Override
@@ -107,7 +132,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
         try {
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
-                    player + " has joined the game.");
+                    player + " has joined the game as " + color + ".");
             connections.broadcastMessage(message, List.of(session), gameID);
         } catch (IOException ex){
             ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
@@ -122,10 +147,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             GameData gameData = dataAccess.getGame(gameID);
             try {
                 validateIsPlayer(gameData, player);
-                gameData.getGame().makeMove(move);
                 if (gameData.getGame().isGameOver()){
                     throw new DataAccessException("Game Over!");
                 }
+                gameData.getGame().makeMove(move);
                 dataAccess.updateGame(gameID, gameData.getGame());
             }
             catch (InvalidMoveException e) {
@@ -149,8 +174,17 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     private void broadcastBoardState(GameData gameData, int gameID) throws IOException {
-        ServerMessage message = null;
-        if (gameData.getGame().isInCheck(ChessGame.TeamColor.WHITE)){
+        ServerMessage message;
+        if (gameData.getGame().isInCheckmate(ChessGame.TeamColor.WHITE)){
+            message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
+                    gameData.getWhiteUsername() + " (white) is in checkmate! Black wins!");
+            connections.broadcastMessage(message, List.of(), gameID);
+
+        } else if (gameData.getGame().isInCheckmate(ChessGame.TeamColor.BLACK)){
+            message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
+                    gameData.getBlackUsername() + " (black) is in checkmate! White wins");
+            connections.broadcastMessage(message, List.of(), gameID);
+        } else if (gameData.getGame().isInCheck(ChessGame.TeamColor.WHITE)){
              message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                      gameData.getWhiteUsername() + " (white) is in check!");
              connections.broadcastMessage(message, List.of(), gameID);
@@ -158,16 +192,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         } else if (gameData.getGame().isInCheck(ChessGame.TeamColor.BLACK)){
             message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     gameData.getBlackUsername() + " (black) is in check!");
-            connections.broadcastMessage(message, List.of(), gameID);
-
-        } else if (gameData.getGame().isInCheckmate(ChessGame.TeamColor.WHITE)){
-            message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
-                    gameData.getWhiteUsername() + " (white) is in checkmate! Black wins!");
-            connections.broadcastMessage(message, List.of(), gameID);
-
-        } else if (gameData.getGame().isInCheckmate(ChessGame.TeamColor.BLACK)){
-            message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
-                    gameData.getBlackUsername() + " (black) is in checkmate! Black wins");
             connections.broadcastMessage(message, List.of(), gameID);
 
         } else if (gameData.getGame().isInStalemate(gameData.getGame().getTeamTurn())){
@@ -200,7 +224,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 throw new IOException("Game is already over!");
             }
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
-                    player + " has resigned.");
+                    player + " has resigned. Game over!");
             connections.broadcastMessage(message, List.of(new Session[]{}), gameID);
             gameData.getGame().setGameOver(true);
             dataAccess.updateGame(gameID, gameData.getGame());

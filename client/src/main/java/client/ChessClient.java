@@ -4,6 +4,7 @@ import chess.ChessMove;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import chess.InvalidMoveException;
+import com.google.gson.Gson;
 import datamodels.GameData;
 import serverfacade.GameDataList;
 import serverfacade.ServerFacade;
@@ -16,6 +17,7 @@ import ui.ChessBoardUI;
 import ui.EscapeSequences;
 import websocket.ServerMessageHandler;
 import websocket.WebSocketFacade;
+import websocket.messages.ErrorMessage;
 import websocket.messages.GameMessage;
 import websocket.messages.ServerMessage;
 
@@ -185,7 +187,12 @@ public class ChessClient implements ServerMessageHandler {
 
     }
 
+    private void printPlayStatus(){
+        System.out.print(EscapeSequences.SET_TEXT_COLOR_MAGENTA + playingStatus+ " >> ");
+    }
+
     private void observerRepl(GameData gameData) {
+        playingStatus = "[Observing]";
         Scanner scanner = new Scanner(System.in);
         System.out.println("Now observing: " + gameData.getGameName());
         drawer.draw(gameData.getGame().getBoard(), false);
@@ -196,7 +203,7 @@ public class ChessClient implements ServerMessageHandler {
 
         label:
         while (true) {
-            System.out.print(EscapeSequences.SET_TEXT_COLOR_MAGENTA + "[Observing]" + " >> ");
+            printPlayStatus();
             String input = scanner.nextLine();
             switch (input) {
                 case "quit":
@@ -232,8 +239,9 @@ public class ChessClient implements ServerMessageHandler {
         System.out.println("Black player: " + gameData.getBlackUsername());
 
         while (true) {
-            System.out.print(EscapeSequences.SET_TEXT_COLOR_MAGENTA + playingStatus + " >> ");
+            printPlayStatus();
             String[] command = scanner.nextLine().split(" ");
+            command[0] = command[0].toLowerCase();
             switch (command[0]){
                 case "help":
                     checkArgs(command, command[0], 0);
@@ -259,6 +267,8 @@ public class ChessClient implements ServerMessageHandler {
                     break;
                 case "redraw":
                     if (checkArgs(command, command[0], 0)){break;}
+                    try {gameDataList = server.listGames(command, authToken);} catch (Exception e) {}
+                    gameData = gameDataList.get(gameIndex);
                     drawer.draw(gameData.getGame().getBoard(), isBlack);
                     break;
                 case "move":
@@ -279,11 +289,15 @@ public class ChessClient implements ServerMessageHandler {
                     ChessPosition startPos = parsePosition(command[1]);
                     ChessPosition endPos = parsePosition(command[2]);
                     ChessMove move = new ChessMove(startPos, endPos, promotionPiece);
-                    webSocket.makeMove(authToken, gameIndex, move);
+                    webSocket.makeMove(authToken, gameData.getGameID(), move);
+                    break;
+                case "resign":
+                    checkArgs(command, command[0], 0);
+                    webSocket.resign(authToken, gameData.getGameID());
                     break;
                 case "leave":
                     checkArgs(command, command[0], 0);
-                    webSocket.leaveGame(authToken, gameIndex);
+                    webSocket.leaveGame(authToken, gameData.getGameID());
                     System.out.println("Returning to main menu . . .");
                     break;
                 default:
@@ -324,7 +338,7 @@ public class ChessClient implements ServerMessageHandler {
             return;
         }
         int i = 1;
-        for (GameData gameData : listOfGames){
+        for (GameData gameData : gameDataList){
             System.out.println(EscapeSequences.SET_TEXT_COLOR_WHITE + i + ". " + gameData.getGameName());
             drawer.draw(gameData.getGame().getBoard(), false);
             System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE);
@@ -471,16 +485,26 @@ public class ChessClient implements ServerMessageHandler {
         return new ChessPosition(row, col);
     }
 
-    @Override
-    public void notify(ServerMessage serverMessage) {
-        switch (serverMessage.getServerMessageType()){
-            case LOAD_GAME -> {
-                GameMessage gameMessage = (GameMessage) serverMessage;
-                gameDataList.get(currentGameIndex).getGame().setBoard(gameMessage.getGame().getBoard());
-                drawer.draw(gameMessage.getGame().getBoard(), isBlack);
+    public void notify(String message) {
+        try {
+            Gson g = new Gson();
+            var serverMessage = g.fromJson(message, ServerMessage.class);
+            switch (serverMessage.getServerMessageType()) {
+                case LOAD_GAME -> {
+                    GameMessage gameMessage = g.fromJson(message, GameMessage.class);
+                    gameDataList.get(currentGameIndex).getGame().setBoard(gameMessage.getGame().getBoard());
+                    System.out.println();
+                    drawer.draw(gameMessage.getGame().getBoard(), isBlack);
+                }
+                case NOTIFICATION ->
+                        System.out.println("\n" + EscapeSequences.SET_TEXT_COLOR_WHITE + serverMessage.getMessage());
+                case ERROR ->
+                        System.out.println("\n" + EscapeSequences.SET_TEXT_COLOR_RED + g.fromJson(message, ErrorMessage.class).getErrorMessage());
             }
-            case NOTIFICATION -> System.out.println(EscapeSequences.SET_TEXT_COLOR_WHITE + serverMessage.getMessage());
-            case ERROR -> System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + serverMessage.getMessage());
+        } catch (Exception e){
+            System.out.println("\nSome kind of error occurred and I don't know what!\n" + e.getMessage());
+        } finally {
+            printPlayStatus();
         }
 
     }

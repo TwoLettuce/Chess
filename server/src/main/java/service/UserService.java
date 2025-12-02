@@ -11,7 +11,7 @@ import org.mindrot.jbcrypt.BCrypt;
 import java.util.UUID;
 
 public class UserService {
-    private DataAccess dataAccess;
+    private final DataAccess dataAccess;
     public UserService(DataAccess dataAccess){
         this.dataAccess = dataAccess;
     }

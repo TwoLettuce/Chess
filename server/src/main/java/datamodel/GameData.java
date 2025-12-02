@@ -5,11 +5,11 @@ import chess.ChessGame;
 import java.util.Objects;
 
 public class GameData {
-    private int gameID;
+    private final int gameID;
     private String whiteUsername;
     private String blackUsername;
-    private String gameName;
-    private ChessGame game;
+    private final String gameName;
+    private final ChessGame game;
 
     public GameData(int gameID, String whiteUsername, String blackUsername, String gameName, ChessGame game){
         this.gameID = gameID;

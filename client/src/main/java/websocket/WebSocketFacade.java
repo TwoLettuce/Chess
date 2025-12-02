@@ -11,35 +11,58 @@ import websocket.messages.ServerMessage;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class WebSocketFacade extends Endpoint {
+@ClientEndpoint
+public class WebSocketFacade {
 
     Session session;
-    ServerMessageHandler serverMessageHandler;
+    static ServerMessageHandler serverMessageHandler;
+    private Timer ping;
+
 
     public WebSocketFacade(String url, ServerMessageHandler serverMessageHandler){
         try {
+
             url = url.replace("http", "ws");
 
             URI webSocketURI = new URI(url + "/ws");
 
 
-            this.serverMessageHandler = serverMessageHandler;
+            WebSocketFacade.serverMessageHandler = serverMessageHandler;
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
             this.session = container.connectToServer(this, webSocketURI);
 
-            this.session.addMessageHandler((MessageHandler.Whole<String>) message -> {
-                ServerMessage serverMessage = new Gson().fromJson(message, ServerMessage.class);
-                serverMessageHandler.notify(serverMessage);
-            });
 
         } catch (URISyntaxException | IOException | DeploymentException ex){
             ex.printStackTrace();
         }
     }
 
-    @Override
-    public void onOpen(Session session, EndpointConfig endpointConfig) {
+    @OnOpen
+    public void onOpen(Session session, EndpointConfig config) {
+        this.session = session;
+
+        ping = new Timer(true);
+        ping.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (session.isOpen()) {
+                    try {
+                        session.getAsyncRemote().sendPing(ByteBuffer.wrap(new byte[]{1}));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }, 25000, 25000);
+    }
+
+    @OnMessage
+    public void onMessage(String json){
+        serverMessageHandler.notify(json);
     }
 
     public void connectToGame(String authToken, int gameID, String color) {
@@ -73,9 +96,15 @@ public class WebSocketFacade extends Endpoint {
         try {
             UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
             this.session.getBasicRemote().sendText(new Gson().toJson(command));
-        } catch (IOException ex) {
+        } catch (IOException | IllegalStateException ex) {
             System.out.println(ex.getMessage());
         }
     }
 
+    @OnClose
+    public void onClose(Session session, CloseReason reason) {
+        if (ping != null) {
+            ping.cancel();
+        }
+    }
 }

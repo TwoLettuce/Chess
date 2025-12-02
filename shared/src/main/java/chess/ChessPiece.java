@@ -128,10 +128,10 @@ public class ChessPiece {
         //Add promotion options, if applicable
         ArrayList<ChessMove> currentMovesList = new ArrayList<>(legalMoves);
         for (ChessMove move : currentMovesList){
-            if (move.getEndPosition().getRow() == promotionRow){
+            if (move.endPosition().getRow() == promotionRow){
                 for (PieceType promotionPiece : PieceType.values()) {
                     if (promotionPiece != PieceType.KING && promotionPiece != PieceType.PAWN) {
-                        legalMoves.add(new ChessMove(myPosition, move.getEndPosition(), promotionPiece));
+                        legalMoves.add(new ChessMove(myPosition, move.endPosition(), promotionPiece));
                     }
                 }
                 legalMoves.remove(move);

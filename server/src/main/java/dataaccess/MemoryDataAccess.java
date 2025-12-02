@@ -9,9 +9,9 @@ import datamodel.UserData;
 import java.util.*;
 
 public class MemoryDataAccess implements DataAccess {
-    private HashMap<String, UserData> users = new HashMap<>();
-    private HashMap<String, String> validAuthTokens = new HashMap<>();
-    private ArrayList<GameData> games = new ArrayList<>();
+    private final HashMap<String, UserData> users = new HashMap<>();
+    private final HashMap<String, String> validAuthTokens = new HashMap<>();
+    private final ArrayList<GameData> games = new ArrayList<>();
 
     @Override
     public UserData getUser(String username) throws DataAccessException {

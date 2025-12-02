@@ -8,7 +8,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ServerFacade {
@@ -41,15 +40,15 @@ public class ServerFacade {
         sendRequest(request, null);
     }
 
-    public ArrayList<datamodels.GameData> listGames(String[] args, String authToken) throws Exception {
+    public GameDataList listGames(String[] args, String authToken) throws Exception {
         var request = buildRequest("GET", "/game", null, authToken);
         Object response = sendRequest(request, Object.class);
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(datamodels.GameData.class, new GameDataTypeAdapter());
         Gson deserializer = builder.create();
         String gameDataAsJsonMap = deserializer.toJson(response);
-        String gameDataAsJson = deserializer.toJson(deserializer.fromJson((String) gameDataAsJsonMap, HashMap.class).get("games"));
-        return deserializer.fromJson((String) gameDataAsJson, GameDataList.class);
+        String gameDataAsJson = deserializer.toJson(deserializer.fromJson(gameDataAsJsonMap, HashMap.class).get("games"));
+        return deserializer.fromJson(gameDataAsJson, GameDataList.class);
     }
 
     public int createGame(String[] args, String authToken) throws Exception {

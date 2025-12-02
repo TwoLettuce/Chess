@@ -68,7 +68,7 @@ public class ChessBoardUI {
         var validMoves = game.validMoves(pos);
         ArrayList<ChessPosition> validDestinations = new ArrayList<>();
         for (ChessMove move : validMoves){
-            validDestinations.add(move.getEndPosition());
+            validDestinations.add(move.endPosition());
         }
         for (int row : rowHeader){
             StringBuilder thisRow = new StringBuilder();

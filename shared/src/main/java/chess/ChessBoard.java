@@ -47,47 +47,47 @@ public class ChessBoard {
     }
 
     public void movePiece(ChessMove move){
-        if (getPiece(move.getStartPosition()).getPieceType() == ChessPiece.PieceType.KING){
+        if (getPiece(move.startPosition()).getPieceType() == ChessPiece.PieceType.KING){
             moveKing(move);
             return;
         }
-        if (getPiece(move.getStartPosition()).getPieceType() == ChessPiece.PieceType.PAWN){
+        if (getPiece(move.startPosition()).getPieceType() == ChessPiece.PieceType.PAWN){
             movePawn(move);
         }
 
-        if (getPiece(move.getStartPosition()).getPieceType() == ChessPiece.PieceType.PAWN && move.getPromotionPiece() != null) {
-            addPiece(move.getEndPosition(), new ChessPiece(getPiece(move.getStartPosition()).getTeamColor(), move.getPromotionPiece()));
+        if (getPiece(move.startPosition()).getPieceType() == ChessPiece.PieceType.PAWN && move.promotionPiece() != null) {
+            addPiece(move.endPosition(), new ChessPiece(getPiece(move.startPosition()).getTeamColor(), move.promotionPiece()));
         } else {
-            addPiece(move.getEndPosition(), getPiece(move.getStartPosition()));
+            addPiece(move.endPosition(), getPiece(move.startPosition()));
         }
 
-        removePiece(move.getStartPosition());
+        removePiece(move.startPosition());
     }
 
     private void movePawn(ChessMove move) {
         ChessPosition attackedPawn;
-        if (getPiece(move.getStartPosition()).getTeamColor() == ChessGame.TeamColor.WHITE) {
-            attackedPawn = new ChessPosition(move.getEndPosition().getRow() - 1, move.getEndPosition().getColumn());
+        if (getPiece(move.startPosition()).getTeamColor() == ChessGame.TeamColor.WHITE) {
+            attackedPawn = new ChessPosition(move.endPosition().getRow() - 1, move.endPosition().getColumn());
         } else {
-            attackedPawn = new ChessPosition(move.getEndPosition().getRow() + 1, move.getEndPosition().getColumn());
+            attackedPawn = new ChessPosition(move.endPosition().getRow() + 1, move.endPosition().getColumn());
         }
 
-        if (getPiece(move.getEndPosition()) == null && move.getStartPosition().getColumn() != move.getEndPosition().getColumn()) {
+        if (getPiece(move.endPosition()) == null && move.startPosition().getColumn() != move.endPosition().getColumn()) {
                 removePiece(attackedPawn);
         }
     }
 
     private void moveKing(ChessMove move) {
-        addPiece(move.getEndPosition(), getPiece(move.getStartPosition()));
-        removePiece(move.getStartPosition());
-        if (abs(move.getStartPosition().getColumn() - move.getEndPosition().getColumn()) > 1) {
-            if (Objects.equals(move.getEndPosition(), new ChessPosition(1, 3)) && !getPiece(new ChessPosition(1, 1)).hasMoved) {
+        addPiece(move.endPosition(), getPiece(move.startPosition()));
+        removePiece(move.startPosition());
+        if (abs(move.startPosition().getColumn() - move.endPosition().getColumn()) > 1) {
+            if (Objects.equals(move.endPosition(), new ChessPosition(1, 3)) && !getPiece(new ChessPosition(1, 1)).hasMoved) {
                 movePiece(new ChessMove(new ChessPosition(1, 1), new ChessPosition(1, 4), null));
-            } else if (Objects.equals(move.getEndPosition(), new ChessPosition(1, 7)) && !getPiece(new ChessPosition(1, 8)).hasMoved) {
+            } else if (Objects.equals(move.endPosition(), new ChessPosition(1, 7)) && !getPiece(new ChessPosition(1, 8)).hasMoved) {
                 movePiece(new ChessMove(new ChessPosition(1, 8), new ChessPosition(1, 6), null));
-            } else if (Objects.equals(move.getEndPosition(), new ChessPosition(8, 3)) && !getPiece(new ChessPosition(8, 1)).hasMoved) {
+            } else if (Objects.equals(move.endPosition(), new ChessPosition(8, 3)) && !getPiece(new ChessPosition(8, 1)).hasMoved) {
                 movePiece(new ChessMove(new ChessPosition(8, 1), new ChessPosition(8, 4), null));
-            } else if (Objects.equals(move.getEndPosition(), new ChessPosition(8, 7)) && !getPiece(new ChessPosition(8, 8)).hasMoved) {
+            } else if (Objects.equals(move.endPosition(), new ChessPosition(8, 7)) && !getPiece(new ChessPosition(8, 8)).hasMoved) {
                 movePiece(new ChessMove(new ChessPosition(8, 8), new ChessPosition(8, 6), null));
             }
         }

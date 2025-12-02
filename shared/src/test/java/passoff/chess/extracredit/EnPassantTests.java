@@ -238,7 +238,7 @@ public class EnPassantTests {
         game.makeMove(setupMove);
 
         //make sure pawn has En Passant move
-        Assertions.assertTrue(game.validMoves(enPassantMove.getStartPosition()).contains(enPassantMove),
+        Assertions.assertTrue(game.validMoves(enPassantMove.startPosition()).contains(enPassantMove),
                 "ChessGame validMoves did not contain a valid En Passant move");
 
         //en passant move works correctly
