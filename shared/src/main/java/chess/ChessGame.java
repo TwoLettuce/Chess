@@ -1,5 +1,4 @@
 package chess;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
@@ -11,7 +10,6 @@ import java.util.Objects;
  * signature of the existing methods.
  */
 public class ChessGame {
-
     TeamColor currentTurn = TeamColor.WHITE;
     ChessBoard board = new ChessBoard();
     ChessBoard previousBoard;
@@ -31,20 +29,18 @@ public class ChessGame {
         this.board = board;
         this.gameOver = gameOver;
     }
-
     public ChessGame(TeamColor currentTurn, ChessBoard board, ChessBoard previousBoard, boolean gameOver){
         this.currentTurn = currentTurn;
         this.board = board;
+        this.previousBoard = previousBoard;
         this.gameOver = gameOver;
     }
-
     /**
      * @return Which team's turn it is
      */
     public TeamColor getTeamTurn() {
         return currentTurn;
     }
-
     /**
      * Set's which teams turn it is
      *
@@ -63,14 +59,9 @@ public class ChessGame {
         return isInCheckmate(TeamColor.WHITE) || isInCheckmate(TeamColor.BLACK) || isInStalemate(currentTurn) || gameOver;
     }
 
-    public void setGameOver(boolean gameOver){
-        this.gameOver = gameOver;
-    }
+    public void setGameOver(boolean gameOver){ this.gameOver = gameOver;}
 
-    public enum TeamColor {
-        WHITE,
-        BLACK
-    }
+    public enum TeamColor { WHITE, BLACK }
 
     /**
      * Gets a valid moves for a piece at the given location
@@ -85,9 +76,7 @@ public class ChessGame {
         for (ChessMove move : board.getPiece(startPosition).pieceMoves(board, startPosition)){
             try {
                 tryMove(move);
-                if (!isInCheck(currentTurn)) {
-                    goodMoves.add(move);
-                }
+                if (!isInCheck(currentTurn)) { goodMoves.add(move); }
                 board = new ChessBoard(currentBoard);
             } catch (InvalidMoveException ex) {
                 board = new ChessBoard(currentBoard);

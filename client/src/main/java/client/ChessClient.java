@@ -457,7 +457,6 @@ public class ChessClient implements ServerMessageHandler {
                 return true;
             }
         }
-
         if (args.length > numArgsExpected+1) {
             System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid use of command: " + command);
             System.out.println("Expected " + numArgsExpected + " arguments but received " + (args.length-1));
@@ -472,40 +471,28 @@ public class ChessClient implements ServerMessageHandler {
         int row = positionAsString.charAt(1) - '0';
         int col;
         switch (colChar){
-            case 'a' -> col = 1;
-            case 'b' -> col = 2;
-            case 'c' -> col = 3;
-            case 'd' -> col = 4;
-            case 'e' -> col = 5;
-            case 'f' -> col = 6;
-            case 'g' -> col = 7;
-            case 'h' -> col = 8;
-            default -> col = -1;
+            case 'a' -> col = 1; case 'b' -> col = 2; case 'c' -> col = 3;
+            case 'd' -> col = 4; case 'e' -> col = 5; case 'f' -> col = 6;
+            case 'g' -> col = 7; case 'h' -> col = 8; default -> col = -1;
         }
         return new ChessPosition(row, col);
     }
 
     public void notify(String message) {
-        try {
-            Gson g = new Gson();
-            var serverMessage = g.fromJson(message, ServerMessage.class);
-            switch (serverMessage.getServerMessageType()) {
-                case LOAD_GAME -> {
-                    GameMessage gameMessage = g.fromJson(message, GameMessage.class);
-                    gameDataList.get(currentGameIndex).getGame().setBoard(gameMessage.getGame().getBoard());
-                    System.out.println();
-                    drawer.draw(gameMessage.getGame().getBoard(), isBlack);
-                }
-                case NOTIFICATION ->
-                        System.out.println("\n" + EscapeSequences.SET_TEXT_COLOR_WHITE + serverMessage.getMessage());
-                case ERROR ->
-                        System.out.println("\n" + EscapeSequences.SET_TEXT_COLOR_RED + g.fromJson(message, ErrorMessage.class).getErrorMessage());
+        Gson g = new Gson();
+        var serverMessage = g.fromJson(message, ServerMessage.class);
+        switch (serverMessage.getServerMessageType()) {
+            case LOAD_GAME -> {
+                GameMessage gameMessage = g.fromJson(message, GameMessage.class);
+                gameDataList.get(currentGameIndex).getGame().setBoard(gameMessage.getGame().getBoard());
+                System.out.println();
+                drawer.draw(gameMessage.getGame().getBoard(), isBlack);
             }
-        } catch (Exception e){
-            System.out.println("\nSome kind of error occurred and I don't know what!\n" + e.getMessage());
-        } finally {
-            printPlayStatus();
+            case NOTIFICATION ->
+                    System.out.println("\n" + EscapeSequences.SET_TEXT_COLOR_WHITE + serverMessage.getMessage());
+            case ERROR ->
+                    System.out.println("\n" + EscapeSequences.SET_TEXT_COLOR_RED + g.fromJson(message, ErrorMessage.class).getErrorMessage());
         }
-
+        printPlayStatus();
     }
 }
