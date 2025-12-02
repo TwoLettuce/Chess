@@ -97,7 +97,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             }
             GameMessage gameMessage = new GameMessage(ServerMessage.ServerMessageType.LOAD_GAME,
                     dataAccess.getGame(gameID).getGame());
-            connections.add(session);
+            connections.add(session, gameID);
             connections.sendMessage(gameMessage, session);
         } catch (NullPointerException ex){
             ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
@@ -108,7 +108,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         try {
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     player + " has joined the game.");
-            connections.broadcastMessage(message, List.of(session));
+            connections.broadcastMessage(message, List.of(session), gameID);
         } catch (IOException ex){
             ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
                     "Server Error.");
@@ -136,11 +136,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             }
             GameMessage gameMessage = new GameMessage(ServerMessage.ServerMessageType.LOAD_GAME,
                     gameData.getGame());
-            connections.broadcastMessage(gameMessage, List.of());
+            connections.broadcastMessage(gameMessage, List.of(), gameID);
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     player + " made the move " + move + ".");
-            connections.broadcastMessage(message, List.of(new Session[]{session}));
-            broadcastBoardState(gameData);
+            connections.broadcastMessage(message, List.of(new Session[]{session}), gameID);
+            broadcastBoardState(gameData, gameID);
         } catch (IOException | DataAccessException ex){
             ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
                     "Server Error.");
@@ -148,32 +148,32 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
     }
 
-    private void broadcastBoardState(GameData gameData) throws IOException {
+    private void broadcastBoardState(GameData gameData, int gameID) throws IOException {
         ServerMessage message = null;
         if (gameData.getGame().isInCheck(ChessGame.TeamColor.WHITE)){
              message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                      gameData.getWhiteUsername() + " (white) is in check!");
-             connections.broadcastMessage(message, List.of());
+             connections.broadcastMessage(message, List.of(), gameID);
 
         } else if (gameData.getGame().isInCheck(ChessGame.TeamColor.BLACK)){
             message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     gameData.getBlackUsername() + " (black) is in check!");
-            connections.broadcastMessage(message, List.of());
+            connections.broadcastMessage(message, List.of(), gameID);
 
         } else if (gameData.getGame().isInCheckmate(ChessGame.TeamColor.WHITE)){
             message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     gameData.getWhiteUsername() + " (white) is in checkmate! Black wins!");
-            connections.broadcastMessage(message, List.of());
+            connections.broadcastMessage(message, List.of(), gameID);
 
         } else if (gameData.getGame().isInCheckmate(ChessGame.TeamColor.BLACK)){
             message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     gameData.getBlackUsername() + " (black) is in checkmate! Black wins");
-            connections.broadcastMessage(message, List.of());
+            connections.broadcastMessage(message, List.of(), gameID);
 
         } else if (gameData.getGame().isInStalemate(gameData.getGame().getTeamTurn())){
             message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     gameData.getGame().getTeamTurn() + " can't make any moves. Stalemate!");
-            connections.broadcastMessage(message, List.of());
+            connections.broadcastMessage(message, List.of(), gameID);
         }
 
     }
@@ -201,7 +201,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             }
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     player + " has resigned.");
-            connections.broadcastMessage(message, List.of(new Session[]{}));
+            connections.broadcastMessage(message, List.of(new Session[]{}), gameID);
             gameData.getGame().setGameOver(true);
             dataAccess.updateGame(gameID, gameData.getGame());
         } catch (DataAccessException e) {
@@ -228,8 +228,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             String color = determinePlayerColor(gameData, dataAccess.getAuthData(authToken).username());
             ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION,
                     player + " (" + color + ") has left the game.");
-            connections.broadcastMessage(message, List.of(new Session[]{session}));
-            if (color == "OBSERVER"){
+            connections.broadcastMessage(message, List.of(new Session[]{session}), gameID);
+            if (color.equals("OBSERVER")){
                 return;
             }
             dataAccess.removeUserFromGame(color, gameID);

@@ -6,16 +6,15 @@ import websocket.messages.ServerMessage;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConnectionManager {
 
-    ConcurrentHashMap<Session, Session> connections = new ConcurrentHashMap<>();
-    boolean gameIsPlayable;
+    ConcurrentHashMap<Session, Integer> connections = new ConcurrentHashMap<>();
 
-
-    public void add(Session session){
-        connections.put(session, session);
+    public void add(Session session, Integer gameID){
+        connections.put(session, gameID);
     }
 
     public void remove(Session session){
@@ -23,12 +22,12 @@ public class ConnectionManager {
     }
 
     public boolean contains(Session session){
-        return connections.contains(session);
+        return connections.containsKey(session);
     }
 
-    public void broadcastMessage(ServerMessage serverMessage, Collection<Session> excludedSessions) throws IOException {
-        for (Session session : connections.values()){
-            if (!excludedSessions.contains(session) && session.isOpen()){
+    public void broadcastMessage(ServerMessage serverMessage, Collection<Session> excludedSessions, Integer gameID) throws IOException {
+        for (Session session : connections.keySet()){
+            if (!excludedSessions.contains(session) && session.isOpen() && Objects.equals(connections.get(session), gameID)){
                 session.getRemote().sendString(new Gson().toJson(serverMessage));
             }
         }
