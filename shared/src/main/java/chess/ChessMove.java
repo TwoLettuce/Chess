@@ -23,7 +23,6 @@ public record ChessMove(ChessPosition startPosition, ChessPosition endPosition, 
      */
     @Override
     public ChessPosition endPosition() {
-
         return endPosition;
     }
 
