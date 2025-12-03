@@ -32,7 +32,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private final Gson serializer = new Gson();
     private final ConnectionManager connections = new ConnectionManager();
     private final DataAccess dataAccess;
-    private Timer pong;
 
     public WebSocketHandler(DataAccess dataAccess){
         this.dataAccess = dataAccess;
@@ -42,7 +41,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     @OnOpen
     public void onOpen(Session session) {
         session.setIdleTimeout(Duration.ofDays(0));
-        pong = new Timer(true);
+        Timer pong = new Timer(true);
         pong.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
