@@ -7,8 +7,6 @@ import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import datamodel.GameData;
 import io.javalin.websocket.*;
-import jakarta.websocket.OnMessage;
-import jakarta.websocket.OnOpen;
 import org.jetbrains.annotations.NotNull;
 import websocket.commands.ConnectCommand;
 import websocket.commands.MoveCommand;
@@ -38,8 +36,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
 
-    @OnOpen
-    public void onOpen(Session session) {
+    public void setupPong(Session session) {
         session.setIdleTimeout(Duration.ofDays(0));
         Timer pong = new Timer(true);
         pong.scheduleAtFixedRate(new TimerTask() {
@@ -61,11 +58,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         System.out.println("Websocket connection established successfully");
 
         ctx.enableAutomaticPings();
-    }
-
-    @OnMessage
-    public void onMessage(String msg){
-
+        setupPong(ctx.session);
     }
 
     @Override
