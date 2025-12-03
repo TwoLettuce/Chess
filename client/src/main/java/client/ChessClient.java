@@ -59,12 +59,8 @@ public class ChessClient implements ServerMessageHandler {
         String[] args = input.split(" ");
         switch (args[0]){
             case "quit":
-                if (checkArgs(args, "quit", 0)){
-                    return "notQuit";
-                }
-                if (loggedIn) {
-                    logout(args);
-                }
+                if (checkArgs(args, "quit", 0)){ return "notQuit"; }
+                if (loggedIn) { logout(args);}
                 break;
             case "help":
                 checkArgs(args, "help", 0);
@@ -75,15 +71,13 @@ public class ChessClient implements ServerMessageHandler {
                     System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please logout first!");
                     return "notQuit";
                 }
-                register(args);
-                break;
+                register(args); break;
             case "login":
                 if (loggedIn) {
                     System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please logout first!");
                     return "notQuit";
                 }
-                login(args);
-                break;
+                login(args); break;
             case "logout":
                 if (!loggedIn) {
                     System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Please login first!");
@@ -155,7 +149,6 @@ public class ChessClient implements ServerMessageHandler {
             return;
         }
         int gameID = gameDataList.get(gameIndex).getGameID();
-
         args[1] = args[1].toUpperCase();
         boolean joinedAsBlack = !Objects.equals(args[1], "WHITE");
 
@@ -167,8 +160,6 @@ public class ChessClient implements ServerMessageHandler {
             System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Expected 'white', 'black', or 'observer' as 1st argument, but got " + args[1]);
             return;
         }
-
-
         try {
             server.joinGame(args[1], gameID, authToken);
             System.out.println("joined " + gameDataList.get(gameIndex).getGameName() + " as " + args[1]);
@@ -184,7 +175,6 @@ public class ChessClient implements ServerMessageHandler {
         isBlack = joinedAsBlack;
         playingStatus = "[Playing in game '" + gameDataList.get(gameIndex).getGameName() + "' as " + args[1] + "]";
         enterGameRepl(joinedAsBlack, gameIndex);
-
     }
 
     private void printPlayStatus(){
@@ -196,11 +186,8 @@ public class ChessClient implements ServerMessageHandler {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Now observing: " + gameData.getGameName());
         drawer.draw(gameData.getGame().getBoard(), false);
-        System.out.print(EscapeSequences.SET_TEXT_COLOR_WHITE);
-        System.out.println("White player: " + gameData.getWhiteUsername());
-        System.out.print(EscapeSequences.SET_TEXT_COLOR_LIGHT_GREY);
-        System.out.println("Black player: " + gameData.getBlackUsername());
-
+        System.out.println(EscapeSequences.SET_TEXT_COLOR_WHITE + "White player: " + gameData.getWhiteUsername());
+        System.out.println(EscapeSequences.SET_TEXT_COLOR_LIGHT_GREY + "Black player: " + gameData.getBlackUsername());
         label:
         while (true) {
             printPlayStatus();
@@ -293,7 +280,11 @@ public class ChessClient implements ServerMessageHandler {
                     break;
                 case "resign":
                     checkArgs(command, command[0], 0);
-                    webSocket.resign(authToken, gameData.getGameID());
+                    System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "\nAre you sure? To confirm, type 'yes'");
+                    printPlayStatus();
+                    String confirm = scanner.nextLine();
+                    if (confirm.trim().equalsIgnoreCase("yes")){webSocket.resign(authToken, gameData.getGameID());}
+                    else {System.out.println(EscapeSequences.SET_TEXT_COLOR_WHITE + "\nResign aborted");}
                     break;
                 case "leave":
                     checkArgs(command, command[0], 0);
@@ -304,9 +295,7 @@ public class ChessClient implements ServerMessageHandler {
                     System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid command. Use 'help' for available commands.");
                     break;
             }
-            if (Objects.equals(command[0], "leave")){
-                break;
-            }
+            if (Objects.equals(command[0], "leave")){ break; }
         }
     }
 
