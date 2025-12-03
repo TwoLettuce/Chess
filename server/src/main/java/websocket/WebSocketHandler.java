@@ -158,9 +158,13 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                     player + " made the move " + move + ".");
             connections.broadcastMessage(message, List.of(new Session[]{session}), gameID);
             broadcastBoardState(gameData, gameID);
-        } catch (IOException | DataAccessException ex){
+        } catch (IOException ex){
             ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
                     "Server Error.");
+            connections.sendMessage(message, session);
+        } catch (DataAccessException ex){
+            ErrorMessage message = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                    ex.getMessage());
             connections.sendMessage(message, session);
         }
     }

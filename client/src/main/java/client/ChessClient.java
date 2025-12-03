@@ -8,8 +8,6 @@ import com.google.gson.Gson;
 import datamodels.GameData;
 import serverfacade.GameDataList;
 import serverfacade.ServerFacade;
-
-import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -237,8 +235,10 @@ public class ChessClient implements ServerMessageHandler {
                         help - display commands
                         highlight <position> - highlights legal moves the piece at "position" can make
                         redraw - redraw the board
-                        move <position1> <position2> - move the piece at position1 to position2, (i.e. [e4 e5], [a1 c1]
+                        move <position1> <position2> - move the piece at position1 to position2, (i.e. [move e4 e5], [move a1 c1])
                         Note: To castle, use the start and end position of the king, not the rook.
+                        Note: When moving a pawn to the final rank, include the piece you want the pawn to be promoted to after the ending position
+                        (i.e. move g7 g8 queen) You must choose a promotion piece in this scenario, or the move is invalid.
                         resign - concede defeat
                         leave - exit the game
                         """);
@@ -314,14 +314,14 @@ public class ChessClient implements ServerMessageHandler {
         if (checkArgs(args, "list", 0)){
             return;
         }
-        ArrayList<GameData> listOfGames;
+        GameDataList listOfGames;
         try {
             listOfGames = server.listGames(args, authToken);
         } catch (Exception ex) {
             System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
             return;
         }
-        gameDataList = (GameDataList) listOfGames;
+        gameDataList = listOfGames;
         if (gameDataList.isEmpty()) {
             System.out.println("There are no active games! Use 'create <gameName>' to create one!");
             return;

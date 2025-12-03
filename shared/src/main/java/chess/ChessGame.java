@@ -154,13 +154,14 @@ public class ChessGame {
 
     private void tryMove(ChessMove move) throws InvalidMoveException {
         if(board.getPiece(move.startPosition()) == null) { throw new InvalidMoveException("There's no piece there!"); }
-        if (board.getPiece(move.startPosition()).getPieceType() != ChessPiece.PieceType.KING) {
+//        if (board.getPiece(move.startPosition()).getPieceType() != ChessPiece.PieceType.KING) {
             Collection<ChessMove> moveList = board.getPiece(move.startPosition()).pieceMoves(board, move.startPosition());
             moveList.addAll(enPassant(getTeamTurn()));
+            moveList.addAll(checkCastling(getTeamTurn()));
             if (!moveList.contains(move)) {
                 throw new InvalidMoveException("Invalid move!");
             }
-        }
+//        }
 
         board.movePiece(move);
         if(isInCheck(board.getPiece(move.endPosition()).getTeamColor())) {
