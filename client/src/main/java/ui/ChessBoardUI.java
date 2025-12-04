@@ -50,14 +50,30 @@ public class ChessBoardUI {
 
 
     public void highlight(ChessGame game, boolean isBlack, ChessPosition pos){
+
         boolean throwsNullPointerException = game.getBoard().getPiece(pos).hasMoved;
+        ChessGame.TeamColor color = game.getBoard().getPiece(pos).getTeamColor();
+        boolean notFlipped = color == game.getTeamTurn();
+        if (!notFlipped){
+            game.setTeamTurn(color);
+        }
         this.board = game.getBoard();
         printHeader(isBlack);
         printRowsWithHighlight(game, isBlack, pos);
         printHeader(isBlack);
+
+        if (!notFlipped){
+            if (game.getTeamTurn() == ChessGame.TeamColor.WHITE){
+                game.setTeamTurn(ChessGame.TeamColor.BLACK);
+            } else {
+                game.setTeamTurn(ChessGame.TeamColor.WHITE);
+            }
+        }
+
     }
 
     private void printRowsWithHighlight(ChessGame game, boolean isBlack, ChessPosition pos) {
+
         int[] rowHeader;
         if (isBlack){
             rowHeader = REVERSE_ROW_HEADER;

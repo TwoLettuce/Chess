@@ -18,6 +18,8 @@ public class ConnectionManager {
     }
 
     public void remove(Session session){
+        session.close();
+        connections.put(session, -1);
         connections.remove(session);
     }
 

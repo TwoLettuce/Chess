@@ -22,6 +22,7 @@ import websocket.messages.ServerMessage;
 public class ChessClient implements ServerMessageHandler {
     ServerFacade server;
     WebSocketFacade webSocket;
+    String serverURL;
     ChessBoardUI drawer = new ChessBoardUI();
     String preloginStatus = EscapeSequences.RESET_BG_COLOR + EscapeSequences.SET_TEXT_COLOR_MAGENTA + "[Not logged in]";
     String postloginStatus;
@@ -35,8 +36,8 @@ public class ChessClient implements ServerMessageHandler {
 
 
     public ChessClient(String serverURL){
+        this.serverURL = serverURL;
         server = new ServerFacade(serverURL);
-        webSocket = new WebSocketFacade(serverURL, this);
     }
 
     public void run() {
@@ -151,6 +152,7 @@ public class ChessClient implements ServerMessageHandler {
         boolean joinedAsBlack = !Objects.equals(args[1], "WHITE");
 
         if (args[1].equals("OBSERVER")) {
+            webSocket = new WebSocketFacade(serverURL, this);
             webSocket.connectToGame(authToken, gameID, args[1]);
             currentGameIndex = gameIndex;
             observerRepl(gameDataList.get(gameIndex));
@@ -161,6 +163,7 @@ public class ChessClient implements ServerMessageHandler {
         try {
             server.joinGame(args[1], gameID, authToken);
             System.out.println("joined " + gameDataList.get(gameIndex).getGameName() + " as " + args[1]);
+            webSocket = new WebSocketFacade(serverURL, this);
             webSocket.connectToGame(authToken, gameID, args[1]);
         } catch (Exception ex){
             if (Objects.equals(ex.getMessage(), "unexpected status: 401")){
@@ -189,10 +192,11 @@ public class ChessClient implements ServerMessageHandler {
         label:
         while (true) {
             printPlayStatus();
-            String input = scanner.nextLine();
-            switch (input) {
-                case "quit":
+            String[] input = scanner.nextLine().split(" ");
+            switch (input[0]) {
+                case "leave":
                     System.out.println("Returning to main menu . . .");
+                    webSocket.leaveGame(authToken, gameData.getGameID());
                     break label;
                 case "help":
                     System.out.println(EscapeSequences.SET_TEXT_COLOR_YELLOW + "Commands and usages: \n" +
@@ -201,12 +205,25 @@ public class ChessClient implements ServerMessageHandler {
                 case "redraw":
                     drawer.draw(gameData.getGame().getBoard(), false);
                     break;
-                case null:
+                case "highlight", "h":
+                    if (checkArgs(input, "highlight", 1)){break;}
+                    try {
+                        ChessPosition position = parsePosition(input[1]);
+                        try {
+                            drawer.highlight(gameData.getGame(), isBlack, position);
+                        } catch (NullPointerException ex) {
+                            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "There's no piece there!");
+                        }
+                    } catch (InvalidMoveException ex){
+                        System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
+                    }
+                    break;
                 default:
                     System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid command");
                     break;
             }
         }
+
     }
 
     private void enterGameRepl(boolean isBlack, int gameIndex) {
@@ -245,12 +262,17 @@ public class ChessClient implements ServerMessageHandler {
                     break;
                 case "highlight", "h":
                     if (checkArgs(command, "highlight", 1)){break;}
-                    ChessPosition position = parsePosition(command[1]);
                     try {
-                        drawer.highlight(gameData.getGame(), isBlack, position);
-                    } catch (NullPointerException ex) {
-                        System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "There's no piece there!");
+                        ChessPosition position = parsePosition(command[1]);
+                        try {
+                            drawer.highlight(gameDataList.get(currentGameIndex).getGame(), isBlack, position);
+                        } catch (NullPointerException ex) {
+                            System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "There's no piece there!");
+                        }
+                    } catch (InvalidMoveException ex){
+                        System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
                     }
+
                     break;
                 case "redraw":
                     if (checkArgs(command, command[0], 0)){break;}
@@ -273,10 +295,14 @@ public class ChessClient implements ServerMessageHandler {
                         System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + "Invalid promotion piece!");
                         break;
                     }
-                    ChessPosition startPos = parsePosition(command[1]);
-                    ChessPosition endPos = parsePosition(command[2]);
-                    ChessMove move = new ChessMove(startPos, endPos, promotionPiece);
-                    webSocket.makeMove(authToken, gameData.getGameID(), move);
+                    try {
+                        ChessPosition startPos = parsePosition(command[1]);
+                        ChessPosition endPos = parsePosition(command[2]);
+                        ChessMove move = new ChessMove(startPos, endPos, promotionPiece);
+                        webSocket.makeMove(authToken, gameData.getGameID(), move);
+                    } catch (InvalidMoveException ex){
+                        System.out.println(EscapeSequences.SET_TEXT_COLOR_RED + ex.getMessage());
+                    }
                     break;
                 case "resign":
                     checkArgs(command, command[0], 0);
@@ -455,7 +481,7 @@ public class ChessClient implements ServerMessageHandler {
         return false;
     }
 
-    private ChessPosition parsePosition(String positionAsString){
+    private ChessPosition parsePosition(String positionAsString) throws InvalidMoveException{
         char colChar = positionAsString.charAt(0);
         int row = positionAsString.charAt(1) - '0';
         int col;
@@ -463,6 +489,9 @@ public class ChessClient implements ServerMessageHandler {
             case 'a' -> col = 1; case 'b' -> col = 2; case 'c' -> col = 3;
             case 'd' -> col = 4; case 'e' -> col = 5; case 'f' -> col = 6;
             case 'g' -> col = 7; case 'h' -> col = 8; default -> col = -1;
+        }
+        if (row < 1 || row > 8 || col < 1 || col > 8){
+            throw new InvalidMoveException("Invalid move!");
         }
         return new ChessPosition(row, col);
     }

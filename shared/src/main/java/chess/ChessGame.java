@@ -82,8 +82,12 @@ public class ChessGame {
                 board = new ChessBoard(currentBoard);
             }
         }
-        goodMoves.addAll(checkCastling(board.getPiece(startPosition).getTeamColor()));
-        goodMoves.addAll(enPassant(board.getPiece(startPosition).getTeamColor()));
+        if (board.getPiece(startPosition).getPieceType() == ChessPiece.PieceType.KING) {
+            goodMoves.addAll(checkCastling(board.getPiece(startPosition).getTeamColor()));
+        }
+        if (board.getPiece(startPosition).getPieceType() == ChessPiece.PieceType.PAWN){
+            goodMoves.addAll(enPassant(board.getPiece(startPosition).getTeamColor()));
+        }
         return goodMoves;
     }
 
@@ -150,7 +154,6 @@ public class ChessGame {
 
         return false;
     }
-
 
     private void tryMove(ChessMove move) throws InvalidMoveException {
         if(board.getPiece(move.startPosition()) == null) { throw new InvalidMoveException("There's no piece there!"); }
